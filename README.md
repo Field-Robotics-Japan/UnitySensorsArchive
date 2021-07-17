@@ -1,2 +1,2 @@
 # OCS_Sensor
-Sensor Assets for OCS.
+Sensor tools for OpenConstructionSim.
