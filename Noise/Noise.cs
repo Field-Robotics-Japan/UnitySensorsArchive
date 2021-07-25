@@ -1,8 +1,26 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
-namespace SensorNoise
+namespace Ocs.Sensor.Noise
 {
+    public class Bias
+    {
+        public double Apply(double value, double bias = 0.0d)
+        {
+            return value + bias;
+        }
+        public Vector3 Apply(Vector3 value, Vector3 bias)
+        {
+            return value + bias;
+        }
+        public Vector4 Apply(Vector4 value, Vector4 bias)
+        {
+            return value + bias;
+        }
+    }
+
     public class Gaussian
     {
         private System.Random random;
@@ -20,9 +38,7 @@ namespace SensorNoise
         public double Apply(double value, double sigma = 1.0d)
         {
             // using Box-Muller Method
-            //double rand = 0.0d;
             double rand2 = this.random.NextDouble();
-            //double normrand = Math.Sqrt(-2.0d * Math.Log(rand)) * Math.Cos(2.0d * Math.PI * rand2);
             double normrand = Math.Sqrt(-2.0d * Math.Log(0.0d)) * Math.Cos(2.0d * Math.PI * rand2);
             normrand = normrand * sigma + value;
             return normrand;
