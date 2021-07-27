@@ -8,7 +8,7 @@ using Unity.Jobs;
 
 namespace Ocs.Sensor
 {
-  public class Lidar3D : MonoBehaviour
+  public class Lidar : MonoBehaviour
   {
     [SerializeField, Tooltip("Target model")]
     private Transform _model;
