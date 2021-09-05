@@ -5,10 +5,10 @@ using UnityEngine;
 using UnityEditor;
 #endif
 
-namespace Ocs.Sensor
+namespace FRJ.Sensor
 {
     [RequireComponent(typeof(Rigidbody))]
-    public class Imu : MonoBehaviour
+    public class IMU : MonoBehaviour
     {
         private Rigidbody _rb;
         private Transform _trans;
@@ -53,10 +53,10 @@ namespace Ocs.Sensor
 
         private void FixedUpdate()
         {
-            UpdateImu();
+            UpdateIMU();
         }
 
-        private void UpdateImu()
+        private void UpdateIMU()
         {
             // Update Object State //
 
@@ -86,14 +86,14 @@ namespace Ocs.Sensor
         }
 
 #if UNITY_EDITOR
-        [CustomEditor(typeof(Imu))]
-        public class ImuEditor : Editor
+        [CustomEditor(typeof(IMU))]
+        public class IMUEditor : Editor
         {
-            private Imu variables;
+            private IMU variables;
 
             private void Awake()
             {
-                this.variables = target as Imu;
+                this.variables = target as IMU;
             }
 
             // inspectorÇÃGUIê›íË

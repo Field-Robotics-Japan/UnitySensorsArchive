@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.Jobs;
 using Unity.Jobs;
 
-namespace Ocs.Sensor
+namespace FRJ.Sensor
 {
   public class Lidar : MonoBehaviour
   {

@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Ocs.Sensor.Noise
+namespace FRJ.Sensor.Noise
 {
     public class Bias
     {
