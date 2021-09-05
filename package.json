@@ -1,0 +1,16 @@
+{
+    "name": "com.frj.unity-sensors",
+    "version": "0.1.0",
+    "displayName": "UnitySensors",
+    "description": "Robotics sensor scripts. This package is not depends on ROS, ROS2 environment.",
+    "unity": "2020.3",
+    "dependencies": {
+        "com.unity.burst": "1.4.8",
+    },
+    "keywords": [
+        "robot",
+        "robotics",
+        "sensor",
+        "simulation"
+    ]
+}

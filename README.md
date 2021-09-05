@@ -1,7 +1,2 @@
-# OCS_Sensor
-Sensor tools for OpenConstructionSim.
-
-## Requirement Packages
- - Unity Packages
-	- Burst
-
+# Unity Sensors
+Sensor tools for Robotics.
