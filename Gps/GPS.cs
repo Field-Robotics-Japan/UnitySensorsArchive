@@ -32,8 +32,6 @@ namespace FRJ.Sensors
         {
             (this._latitude, this._longitude) = gc.XZ2LatLon(this.transform.position.x, this.transform.position.z);
             this._altitude = this._baseAltitude + this.transform.position.y;
-
-            Debug.Log((_latitude, _longitude, _altitude));
         }
     }
 }
