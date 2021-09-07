@@ -25,7 +25,9 @@ namespace FRJ.Sensor
       this._camera  = GetComponent<Camera>();
       this._texture = new Texture2D(this._width, this._height, TextureFormat.RGB24, false);
       this._rect = new Rect(0, 0, this._width, this._height);
+      this._texture.Apply();
       this._camera.targetTexture = new RenderTexture(this._width, this._height, 24);
+
       Camera.onPostRender += UpdateImage;
     }
 
