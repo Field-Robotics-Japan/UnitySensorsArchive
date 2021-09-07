@@ -41,6 +41,7 @@ namespace FRJ.Sensor
         public int numOfIncrements { get => this._numOfIncrements; }
         public float minAzimuthAngle { get => this._minAzimuthAngle; }
         public float maxAzimuthAngle { get => this._maxAzimuthAngle; }
+        public float minRange { get => this._minRange; }
         public float maxRange { get => this._maxRange; }
         public float scanRate { get => this._scanRate; }
         public uint randomSeed { get => this._randomSeed; set {this._randomSeed = value; }}
