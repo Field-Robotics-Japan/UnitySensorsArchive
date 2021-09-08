@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace FRJ.Sensor
 {
-    public class NMEASerializer : MonoBehaviour
+    public class NMEASerializer
     {
         private float _latitude;
         private float _longitude;
