@@ -23,6 +23,9 @@ namespace FRJ.Sensor
         private Noise.Gaussian gaussianNoise;
         private Noise.Bias biasNoise;
 
+        [SerializeField] private float _scanRate = 100f;
+        public float scanRate { get => this._scanRate; }
+        
         public bool enableGaussianNoise;
         public bool enableBiasNoise;
         public NoiseSetting setting = new NoiseSetting();
