@@ -33,8 +33,6 @@ public class GPSSample : MonoBehaviour
 
             // You can access GPGGA message
             string gpgga = this._gps.gpgga;
-
-            Debug.Log(gpgga);
         }
     }
 }
