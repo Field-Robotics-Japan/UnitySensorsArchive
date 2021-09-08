@@ -51,15 +51,10 @@ namespace FRJ.Sensor
             this._linearAcceleration = new Vector3();
         }
 
-        private void FixedUpdate()
-        {
-            UpdateIMU();
-        }
 
         private void UpdateIMU()
         {
             // Update Object State //
-
             // Calculate Move Element
             Vector3 localLinearVelocity = this._trans.InverseTransformDirection(this._rb.velocity);
             Vector3 acceleration = (localLinearVelocity - this._lastVelocity) / Time.deltaTime;
