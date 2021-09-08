@@ -54,8 +54,7 @@ namespace FRJ.Sensor
             this._linearAcceleration = new Vector3();
         }
 
-
-        private void UpdateIMU()
+        public void UpdateIMU()
         {
             // Update Object State //
             // Calculate Move Element
