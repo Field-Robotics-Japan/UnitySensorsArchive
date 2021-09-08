@@ -5,7 +5,7 @@ using System.Text;
 
 // branch : gps
 
-namespace FRJ.Sensors
+namespace FRJ.Sensor
 {
     /// <summary>
     /// 平面直角座標系と緯度経度の相互変換
