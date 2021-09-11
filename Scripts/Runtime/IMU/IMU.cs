@@ -47,8 +47,8 @@ namespace FRJ.Sensor
 
         private void Start()
         {
-            this._trans = GetComponent<Transform>();
-            this._rb = GetComponent<Rigidbody>();
+            this._trans = this.GetComponent<Transform>();
+            this._rb = this.GetComponent<Rigidbody>();
             this._geometryQuaternion = new Vector4();
             this._angularVelocity = new Vector3();
             this._linearAcceleration = new Vector3();
@@ -68,7 +68,7 @@ namespace FRJ.Sensor
 
             // Raw
             this._geometryQuaternion = new Vector4(this._trans.rotation.x, this._trans.rotation.y, this._trans.rotation.z, this._trans.rotation.w);
-            this._angularVelocity = this._rb.angularVelocity;
+            this._angularVelocity = -1 * this.transform.InverseTransformVector(this.GetComponent<Rigidbody>().angularVelocity);
             this._linearAcceleration = acceleration;
 
             // Apply Gaussian Noise
