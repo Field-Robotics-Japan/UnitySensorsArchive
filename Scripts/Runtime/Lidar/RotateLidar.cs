@@ -12,6 +12,12 @@ namespace FRJ.Sensor
 {
     public class RotateLidar : MonoBehaviour
     {
+        private enum RotateDir {
+            CW,
+            CCW
+        }
+        // Rotate Direction on Y unity axis
+        [SerializeField] RotateDir _rotateDir              = RotateDir.CCW;
         // Number of Layers
         [SerializeField] private int   _numOfLayers        = 16;
         // Number of Increments for one rotation 
@@ -77,7 +83,6 @@ namespace FRJ.Sensor
                 ainc = 0;
             else
                 ainc = (float)(this._maxAzimuthAngle - this._minAzimuthAngle) / (float)this._numOfIncrements;
-            Vector3 fwd = new Vector3(0, 0, 1);
             int index = 0;
             float vangle, aangle;
             for (int incr = 0; incr < this._numOfIncrements; incr++)
@@ -87,7 +92,17 @@ namespace FRJ.Sensor
                     index = layer + incr * this._numOfLayers;
                     vangle = this._minVerticalAngle + (float)layer * vinc;
                     aangle = this._minAzimuthAngle + (float)incr * ainc;
-                    this._commandDirVecs[index] = Quaternion.Euler(-vangle,aangle,0)*fwd;
+                    switch(this._rotateDir)
+                    {
+                        case RotateDir.CCW:
+                            this._commandDirVecs[index] = Quaternion.Euler(-vangle,-aangle,0)*Vector3.forward;
+                            break;
+                        case RotateDir.CW:
+                            this._commandDirVecs[index] = Quaternion.Euler(-vangle,aangle,0)*Vector3.forward;
+                            break;
+                        default:
+                            break;
+                    }
                     this.commands[index] = new RaycastCommand(
                                                               this.transform.position,
                                                               this.transform.rotation * this._commandDirVecs[index],
