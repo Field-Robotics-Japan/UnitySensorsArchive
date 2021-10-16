@@ -72,14 +72,14 @@ namespace FRJ.Sensor
             this._linearAcceleration = acceleration;
 
             // Apply Gaussian Noise
-            if (this.enableGaussianNoise) { this._geometryQuaternion = this.gaussianNoise.Apply(this._geometryQuaternion, this.setting.quatSigma); }
-            if (this.enableGaussianNoise) { this._angularVelocity = this.gaussianNoise.Apply(this._angularVelocity, this.setting.angVelSigma); }
-            if (this.enableGaussianNoise) { this._linearAcceleration = this.gaussianNoise.Apply(this._linearAcceleration, this.setting.linAccSigma); }
+            // if (this.enableGaussianNoise) { this._geometryQuaternion = this.gaussianNoise.Apply(this._geometryQuaternion, this.setting.quatSigma); }
+            // if (this.enableGaussianNoise) { this._angularVelocity = this.gaussianNoise.Apply(this._angularVelocity, this.setting.angVelSigma); }
+            // if (this.enableGaussianNoise) { this._linearAcceleration = this.gaussianNoise.Apply(this._linearAcceleration, this.setting.linAccSigma); }
 
-            // Apply Bias Noise
-            if (this.enableBiasNoise) { this._geometryQuaternion = this.biasNoise.Apply(this._geometryQuaternion, this.setting.quatSigma); }
-            if (this.enableBiasNoise) { this._angularVelocity = this.biasNoise.Apply(this._angularVelocity, this.setting.angVelSigma); }
-            if (this.enableBiasNoise) { this._linearAcceleration = this.biasNoise.Apply(this._linearAcceleration, this.setting.linAccSigma); }
+            // // Apply Bias Noise
+            // if (this.enableBiasNoise) { this._geometryQuaternion = this.biasNoise.Apply(this._geometryQuaternion, this.setting.quatSigma); }
+            // if (this.enableBiasNoise) { this._angularVelocity = this.biasNoise.Apply(this._angularVelocity, this.setting.angVelSigma); }
+            // if (this.enableBiasNoise) { this._linearAcceleration = this.biasNoise.Apply(this._linearAcceleration, this.setting.linAccSigma); }
         }
 
 #if UNITY_EDITOR
