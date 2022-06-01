@@ -34,6 +34,8 @@ namespace FRJ.Sensor
         [SerializeField] private float _minRange           = 0.1f;
         // Maximum range (m)
         [SerializeField] private float _maxRange           = 100f;
+        // Maximum intensity ()
+        [SerializeField] private float _maxIntensity       = 255f;
         // Scanning rate (Hz)
         [SerializeField] private float _scanRate           = 20f;
         // Random seed
@@ -49,6 +51,7 @@ namespace FRJ.Sensor
         public float maxAzimuthAngle { get => this._maxAzimuthAngle; }
         public float minRange { get => this._minRange; }
         public float maxRange { get => this._maxRange; }
+        public float maxIntensity { get => this._maxIntensity; }
         public float scanRate { get => this._scanRate; }
         public uint randomSeed { get => this._randomSeed; set {this._randomSeed = value; }}
 
@@ -56,6 +59,7 @@ namespace FRJ.Sensor
         public NativeArray<RaycastCommand> commands;
         // Raycast direction vectors
         private Vector3[] _commandDirVecs;
+        private NativeArray<Vector3> commandDirVecsNative;
         // Raycast results
         public NativeArray<RaycastHit> results;
         // Distance data
@@ -73,6 +77,7 @@ namespace FRJ.Sensor
             // allocate commands
             this.commands = new NativeArray<RaycastCommand>(this._numOfLayers*this._numOfIncrements, Allocator.Persistent);
             this._commandDirVecs = new Vector3[this.commands.Length];
+            this.commandDirVecsNative = new NativeArray<Vector3>(this._numOfLayers * this._numOfIncrements, Allocator.Persistent);
             float vinc;
             if(this._numOfLayers == 1)
                 vinc = 0;
@@ -107,6 +112,7 @@ namespace FRJ.Sensor
                                                               this.transform.position,
                                                               this.transform.rotation * this._commandDirVecs[index],
                                                               this._maxRange);
+                    this.commandDirVecsNative[index] = this.transform.rotation * this._commandDirVecs[index];
                 }
             }
     
@@ -130,8 +136,10 @@ namespace FRJ.Sensor
                     intensities = this.intensities
                 };
             // Update parameter
+            this.job.commandDirVecs = this.commandDirVecsNative;
             this.job.minRange = this._minRange;
             this.job.maxRange = this._maxRange;
+            this.job.maxIntensity = this._maxIntensity;
             this.job.random   = new Random(this._randomSeed);
             this.job.sigma    = this._gaussianNoiseSigma;
             this.job.offset   = this._offsetNoise;   
@@ -140,6 +148,7 @@ namespace FRJ.Sensor
         public void Dispose()
         {
             this.commands.Dispose();
+            this.commandDirVecsNative.Dispose();
             this.results.Dispose();
             this.distances.Dispose();
             this.intensities.Dispose();
@@ -148,12 +157,16 @@ namespace FRJ.Sensor
         [BurstCompile]
         public struct updateData : IJobParallelFor
         {
+            public NativeArray<Vector3> commandDirVecs;
+
             [ReadOnly] public NativeArray<RaycastHit> results;
             public NativeArray<float> distances;
             public NativeArray<float> intensities;
 
             [ReadOnly] public float minRange;
             [ReadOnly] public float maxRange;
+
+            [ReadOnly] public float maxIntensity;
 
             public Random random;
             public float sigma;
@@ -182,7 +195,16 @@ namespace FRJ.Sensor
                 else
                 {
                     distances[index] = results[index].distance + normrand + offset;
-                    intensities[index] = 255 + normrand;
+                    intensities[index] = maxIntensity * minRange * minRange / (distances[index] * distances[index]);
+
+                    /*
+                    OpticalMaterial om = results[index].collider.gameObject.GetComponent<OpticalMaterial>();
+                    if (om)
+                    {
+                        float theta = Vector3.Angle(commandDirVecs[index], Vector3.Reflect(results[index].normal, results[index].normal)) * Mathf.Deg2Rad;
+                        intensities[index] *= om.GetReflectance(theta);
+                    }
+                    */
                 }
             }
         }
