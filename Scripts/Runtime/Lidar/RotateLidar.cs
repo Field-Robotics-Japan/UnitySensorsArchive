@@ -195,7 +195,7 @@ namespace FRJ.Sensor
                 else
                 {
                     distances[index] = results[index].distance + normrand + offset;
-                    intensities[index] = maxIntensity * minRange / distances[index];
+                    intensities[index] = maxIntensity * minRange * minRange / (distances[index] * distances[index]);
 
                     /*
                     OpticalMaterial om = results[index].collider.gameObject.GetComponent<OpticalMaterial>();
