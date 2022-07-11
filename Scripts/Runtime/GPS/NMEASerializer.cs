@@ -84,7 +84,6 @@ namespace FRJ.Sensor
             // Update DGPS data (in this case, empty)
             ret += ",";
             ret += "0000";
-            ret += ",";
 
             // Update checksum
             byte checksum = 0;
