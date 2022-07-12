@@ -6,6 +6,7 @@ using UnityEngine;
 
 namespace FRJ.Sensor
 {
+    [System.Serializable]
     public class NMEASerializer
     {
         #region properties
@@ -28,6 +29,7 @@ namespace FRJ.Sensor
         #endregion
 
         #region GPRMC
+        [System.Serializable]
         public struct GPRMC_DATA_STRUCT
         {
             public bool status;                     // 0 : available, 1 : warning
@@ -36,7 +38,7 @@ namespace FRJ.Sensor
             public float groundSpeed;               // 000.0 ~ 999.9 [knot]
             public float directionOfMovement;       // 000.0 ~ 359.9 [deg]
         }
-        public GPRMC_DATA_STRUCT GPRMC_DATA;
+        [SerializeField] public GPRMC_DATA_STRUCT GPRMC_DATA;
 
         public string GPRMC()
         {
@@ -90,6 +92,7 @@ namespace FRJ.Sensor
             DIFFERENTIAL_GPS = 2
         }
 
+        [System.Serializable]
         public struct GPGGA_DATA_STRUCT
         {
             public float latitude;
@@ -100,7 +103,7 @@ namespace FRJ.Sensor
             public float altitude;
             public float geoidLevel;
         }
-        public GPGGA_DATA_STRUCT GPGGA_DATA;
+        [SerializeField] public GPGGA_DATA_STRUCT GPGGA_DATA;
 
         public string GPGGA()
         {
@@ -155,9 +158,9 @@ namespace FRJ.Sensor
 
         private void AddUTCDate(ref string ret)
         {
-            ret += DateTime.UtcNow.Day.ToString("DO2");
-            ret += DateTime.UtcNow.Month.ToString("DO2");
-            ret += DateTime.UtcNow.Year.ToString("DO2");
+            ret += DateTime.UtcNow.Day.ToString("D02");
+            ret += DateTime.UtcNow.Month.ToString("D02");
+            ret += ((int)(DateTime.UtcNow.Year - (int)(DateTime.UtcNow.Year*0.01)*100)).ToString("D02");
             ret += ",";
         }
         private void AddUTCTime(ref string ret)
