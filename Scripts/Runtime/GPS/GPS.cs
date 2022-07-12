@@ -17,6 +17,14 @@ namespace FRJ.Sensor
         [HideInInspector] public float updateRate { get => this._updateRate; }
         #endregion
 
+        #region Header("Noise")
+        // Random seed
+        [SerializeField] private uint _randomSeed = 1;
+        // Gaussian Noise sigma
+        [SerializeField] private float _gaussianNoiseSigma_horizontal     = 0.0f;
+        [SerializeField] private float _gaussianNoiseSigma_vertical     = 0.0f;
+        #endregion
+
         #region Header("GPRMC")
         [Header("GPRMC")]
         [Tooltip("0 : Available, 1 : Warning")]
@@ -112,8 +120,9 @@ namespace FRJ.Sensor
             float directionOfMovement = Mathf.Atan2(_velocity.x, _velocity.z) * Mathf.Rad2Deg;
             if (directionOfMovement < 0) directionOfMovement += 360.0f;
 
-            (this._latitude, this._longitude) = this._gc.XZ2LatLon(this.transform.position.x, this.transform.position.z);
-            this._altitude = this._baseAltitude + this.transform.position.y;
+            (this._latitude, this._longitude) = this._gc.XZ2LatLon( this.transform.position.x + GetGaussianNoise() * this._gaussianNoiseSigma_horizontal, 
+                                                                    this.transform.position.z + GetGaussianNoise() * this._gaussianNoiseSigma_horizontal);
+            this._altitude = this._baseAltitude + this.transform.position.y + GetGaussianNoise() * this._gaussianNoiseSigma_vertical;
 
             this._serializer.latitude = (float)this._latitude;
             this._serializer.longitude = (float)this._longitude;
@@ -136,6 +145,16 @@ namespace FRJ.Sensor
             this._gpgga = this._serializer.GPGGA();
             this._gpgsa = this._serializer.GPGSA();
             this._gpvtg = this._serializer.GPVTG();
+        }
+
+        private float GetGaussianNoise()
+        {
+            var rand2 = Random.value;
+            var rand3 = Random.value;
+            float normrand =
+                (float)Mathf.Sqrt(-2.0f * Mathf.Log(rand2)) *
+                (float)Mathf.Cos(2.0f * Mathf.PI * rand3);
+            return normrand;
         }
     }
 }
