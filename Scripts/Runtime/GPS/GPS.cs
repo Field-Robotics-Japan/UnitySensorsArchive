@@ -12,6 +12,7 @@ namespace FRJ.Sensor
         [SerializeField] private double _baseLatitude = 35.71020206575301;      // 基地局の緯度
         [SerializeField] private double _baseLongitude = 139.81070039691542;    // 基地局の経度
         [SerializeField] private double _baseAltitude = 3.0;                    // 基地局の標高（海抜高さ）[m]
+        [SerializeField] private NMEASerializer.GPS_MODE _gps_mode = NMEASerializer.GPS_MODE.NONE;
         [SerializeField] private float _HDOP = 1.0f;                            // 水平精度低下率
         [HideInInspector] public float updateRate { get => this._updateRate; }
         #endregion
@@ -20,7 +21,6 @@ namespace FRJ.Sensor
         [Header("GPRMC")]
         [Tooltip("0 : Available, 1 : Warning")]
         [SerializeField] private bool _gprmc_status;
-        [SerializeField] private NMEASerializer.GPRMC_MODE _gprmc_mode = NMEASerializer.GPRMC_MODE.NONE;
         #endregion
 
         #region Header("GPGGA")
@@ -57,10 +57,12 @@ namespace FRJ.Sensor
         [SerializeField] private string _gprmc;
         [SerializeField] private string _gpgga;
         [SerializeField] private string _gpgsa;
+        [SerializeField] private string _gpvtg;
 
         [HideInInspector] public string gprmc { get => this._gprmc; }
         [HideInInspector] public string gpgga { get => this._gpgga; }
         [HideInInspector] public string gpgsa { get => this._gpgsa; }
+        [HideInInspector] public string gpvtg { get => this._gpvtg; }
         #endregion
 
         private GeoCoordinate _gc;
@@ -78,7 +80,7 @@ namespace FRJ.Sensor
 
             // GPRMC
             this._serializer.GPRMC_DATA.status = this._gprmc_status;
-            this._serializer.GPRMC_DATA.mode = this._gprmc_mode;
+            this._serializer.GPRMC_DATA.mode = this._gps_mode;
 
             // GPGGA
             this._serializer.GPGGA_DATA.quality = this._gpgga_quality;
@@ -104,6 +106,12 @@ namespace FRJ.Sensor
             _pos_old = this.transform.position;
             _time_old = time;
 
+            float groundSpeed_knot = Mathf.Sqrt(_velocity.x * _velocity.x + _velocity.z * _velocity.z) * meterPerSec2knot;
+            float groundSpeed_kiloMetersPerHour = Mathf.Sqrt(_velocity.x * _velocity.x + _velocity.z * _velocity.z) * 3.6f;
+
+            float directionOfMovement = Mathf.Atan2(_velocity.x, _velocity.z) * Mathf.Rad2Deg;
+            if (directionOfMovement < 0) directionOfMovement += 360.0f;
+
             (this._latitude, this._longitude) = this._gc.XZ2LatLon(this.transform.position.x, this.transform.position.z);
             this._altitude = this._baseAltitude + this.transform.position.y;
 
@@ -111,9 +119,7 @@ namespace FRJ.Sensor
             this._serializer.longitude = (float)this._longitude;
 
             // GPRMC
-            this._serializer.GPRMC_DATA.groundSpeed = Mathf.Sqrt(_velocity.x * _velocity.x + _velocity.z * _velocity.z) * meterPerSec2knot;
-            float directionOfMovement = Mathf.Atan2(_velocity.x, _velocity.z) * Mathf.Rad2Deg;
-            if (directionOfMovement < 0) directionOfMovement += 360.0f;
+            this._serializer.GPRMC_DATA.groundSpeed = groundSpeed_knot;
             this._serializer.GPRMC_DATA.directionOfMovement = directionOfMovement;
 
             // GPGGA
@@ -121,9 +127,15 @@ namespace FRJ.Sensor
 
             // GPGSA
 
+            // GPVTG
+            this._serializer.GPVTG_DATA.directionOfMovement = directionOfMovement;
+            this._serializer.GPVTG_DATA.groundSpeed_knot = groundSpeed_knot;
+            this._serializer.GPVTG_DATA.groundSpeed_kiloMetersPerHour = groundSpeed_kiloMetersPerHour;
+
             this._gprmc = this._serializer.GPRMC();
             this._gpgga = this._serializer.GPGGA();
             this._gpgsa = this._serializer.GPGSA();
+            this._gpvtg = this._serializer.GPVTG();
         }
     }
 }

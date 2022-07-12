@@ -9,6 +9,14 @@ namespace FRJ.Sensor
     [System.Serializable]
     public class NMEASerializer
     {
+        public enum GPS_MODE
+        {
+            NONE,
+            AUTONOMOUS,
+            DIFFERENTIAL,
+            ESTIMATED
+        }
+
         #region properties
         public float latitude { 
             set{
@@ -29,13 +37,6 @@ namespace FRJ.Sensor
         #endregion
 
         #region GPRMC
-        public enum GPRMC_MODE
-        {
-            NONE,
-            AUTONOMOUS,
-            DIFFERENTIAL,
-            ESTIMATED
-        }
 
         [System.Serializable]
         public struct GPRMC_DATA_STRUCT
@@ -45,7 +46,7 @@ namespace FRJ.Sensor
             public float longitude;
             public float groundSpeed;               // 000.0 ~ 999.9 [knot]
             public float directionOfMovement;       // 000.0 ~ 359.9 [deg]
-            public GPRMC_MODE mode;
+            public GPS_MODE mode;
         }
         [SerializeField] public GPRMC_DATA_STRUCT GPRMC_DATA;
 
@@ -83,16 +84,16 @@ namespace FRJ.Sensor
             // Update mode
             switch (GPRMC_DATA.mode)
             {
-                case GPRMC_MODE.NONE:
+                case GPS_MODE.NONE:
                     ret += "N";
                     break;
-                case GPRMC_MODE.AUTONOMOUS:
+                case GPS_MODE.AUTONOMOUS:
                     ret += "A";
                     break;
-                case GPRMC_MODE.DIFFERENTIAL:
+                case GPS_MODE.DIFFERENTIAL:
                     ret += "D";
                     break;
-                case GPRMC_MODE.ESTIMATED:
+                case GPS_MODE.ESTIMATED:
                     ret += "E";
                     break;
             }
@@ -238,6 +239,62 @@ namespace FRJ.Sensor
 
             // Update VDOP
             ret += GPGSA_DATA.vdop.ToString("0.0");
+
+            // Update checksum
+            AddChecksum(ref ret);
+
+            // Insert CR LF
+            ret += "\r\n";
+
+            return ret;
+        }
+        #endregion
+
+        #region GPVTG
+
+        [System.Serializable]
+        public struct GPVTG_DATA_STRUCT
+        {
+            public float directionOfMovement;       // 000.0 ~ 359.9 [deg]
+            public float groundSpeed_knot;
+            public float groundSpeed_kiloMetersPerHour;
+            public GPS_MODE mode;
+        }
+        [SerializeField] public GPVTG_DATA_STRUCT GPVTG_DATA;
+
+        public string GPVTG()
+        {
+            string ret = "$GPVTG,";
+
+            // Update direction of movement
+            ret += GPVTG_DATA.directionOfMovement.ToString("000.0");
+            ret += ",T,";
+
+            // Update magnetic direction of movement
+            ret += ",M,";
+
+            // Update ground speed
+            ret += GPVTG_DATA.groundSpeed_knot.ToString("000.0");
+            ret += ",N,";
+            ret += GPVTG_DATA.groundSpeed_kiloMetersPerHour.ToString("000.0");
+            ret += ",K,";
+
+            // Update mode
+            switch (GPVTG_DATA.mode)
+            {
+                case GPS_MODE.NONE:
+                    ret += "N";
+                    break;
+                case GPS_MODE.AUTONOMOUS:
+                    ret += "A";
+                    break;
+                case GPS_MODE.DIFFERENTIAL:
+                    ret += "D";
+                    break;
+                case GPS_MODE.ESTIMATED:
+                    ret += "E";
+                    break;
+            }
 
             // Update checksum
             AddChecksum(ref ret);
