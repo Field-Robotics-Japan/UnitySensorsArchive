@@ -12,8 +12,8 @@ namespace FRJ.Sensor
         #region properties
         public float latitude { 
             set{
-                this.GPRMC_DATA.latitude 
-                    = this.GPGGA_DATA.latitude 
+                this.GPRMC_DATA.latitude
+                    = this.GPGGA_DATA.latitude
                     = value;
             } 
         }
@@ -166,6 +166,78 @@ namespace FRJ.Sensor
 
             // Update differential reference point ID
             ret += "0000";
+
+            // Update checksum
+            AddChecksum(ref ret);
+
+            // Insert CR LF
+            ret += "\r\n";
+
+            return ret;
+        }
+        #endregion
+
+        #region GPGSA
+        public enum GPGSA_MODE
+        {
+            MANUAL,
+            AUTO
+        }
+
+        public enum GPGSA_LOCATING_TYPE
+        {
+            NONE = 1,
+            TWO_D = 2,
+            THREE_D = 3
+        }
+
+        [System.Serializable]
+        public struct GPGSA_DATA_STRUCT
+        {
+            public GPGSA_MODE mode;
+            public int[] satellightID;
+            public GPGSA_LOCATING_TYPE locatingType;
+            public float pdop;
+            public float hdop;
+            public float vdop;
+        }
+        [SerializeField] public GPGSA_DATA_STRUCT GPGSA_DATA;
+
+        public string GPGSA()
+        {
+            string ret = "$GPGSA,";
+
+            // Update mode
+            switch (GPGSA_DATA.mode)
+            {
+                case GPGSA_MODE.MANUAL:
+                    ret += "M,";
+                    break;
+                case GPGSA_MODE.AUTO:
+                    ret += "A,";
+                    break;
+            }
+
+            // Update locating type
+            ret += ((int)GPGSA_DATA.locatingType).ToString();
+
+            // Update satellight ID
+            for (int i = 0; i < GPGSA_DATA.satellightID.Length && i < 12; i++)
+            {
+                ret += GPGSA_DATA.satellightID[i].ToString("D02");
+                ret += ",";
+            }
+
+            // Update PDOP
+            ret += GPGSA_DATA.pdop.ToString("0.0");
+            ret += ",";
+
+            // Update HDOP
+            ret += GPGSA_DATA.hdop.ToString("0.0");
+            ret += ",";
+
+            // Update VDOP
+            ret += GPGSA_DATA.vdop.ToString("0.0");
 
             // Update checksum
             AddChecksum(ref ret);
