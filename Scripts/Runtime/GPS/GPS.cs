@@ -46,6 +46,7 @@ namespace FRJ.Sensor
 
             this._gc = new GeoCoordinate(this._baseLatitude, this._baseLongitude);
             this._serializer = new NMEASerializer();
+            this._serializer.GPGGA_DATA.quality = NMEASerializer.GPGGA_QUALITY.SPS;
             this._serializer.GPGGA_DATA.geoidLevel = (float)this._geoidHeight;
             this._serializer.GPGGA_DATA.satelliteNum = this._satelliteNum;
             this._serializer.GPGGA_DATA.hdop = (float)this._HDOP;
