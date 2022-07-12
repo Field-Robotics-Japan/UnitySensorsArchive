@@ -29,6 +29,14 @@ namespace FRJ.Sensor
         #endregion
 
         #region GPRMC
+        public enum GPRMC_MODE
+        {
+            NONE,
+            AUTONOMOUS,
+            DIFFERENTIAL,
+            ESTIMATED
+        }
+
         [System.Serializable]
         public struct GPRMC_DATA_STRUCT
         {
@@ -37,6 +45,7 @@ namespace FRJ.Sensor
             public float longitude;
             public float groundSpeed;               // 000.0 ~ 999.9 [knot]
             public float directionOfMovement;       // 000.0 ~ 359.9 [deg]
+            public GPRMC_MODE mode;
         }
         [SerializeField] public GPRMC_DATA_STRUCT GPRMC_DATA;
 
@@ -72,7 +81,21 @@ namespace FRJ.Sensor
             ret += ",,";
 
             // Update mode
-            ret += "N";
+            switch (GPRMC_DATA.mode)
+            {
+                case GPRMC_MODE.NONE:
+                    ret += "N";
+                    break;
+                case GPRMC_MODE.AUTONOMOUS:
+                    ret += "A";
+                    break;
+                case GPRMC_MODE.DIFFERENTIAL:
+                    ret += "D";
+                    break;
+                case GPRMC_MODE.ESTIMATED:
+                    ret += "E";
+                    break;
+            }
 
             // Update checksum
             AddChecksum(ref ret);

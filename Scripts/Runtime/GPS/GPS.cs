@@ -51,6 +51,7 @@ namespace FRJ.Sensor
             this._serializer.GPGGA_DATA.satelliteNum = this._satelliteNum;
             this._serializer.GPGGA_DATA.hdop = (float)this._HDOP;
             this._serializer.GPRMC_DATA.status = false;
+            this._serializer.GPRMC_DATA.mode = NMEASerializer.GPRMC_MODE.NONE;
         }
 
         public void updateGPS()
