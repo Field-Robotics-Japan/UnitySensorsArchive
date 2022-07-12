@@ -8,94 +8,197 @@ namespace FRJ.Sensor
 {
     public class NMEASerializer
     {
-        private float _latitude;
-        private float _longitude;
-        private float _altitude;
-        private float _geoidLevel;
-        private int _satelliteNum;
-        private float _hdop;
+        #region properties
+        public float latitude { 
+            set{
+                this.GPRMC_DATA.latitude 
+                    = this.GPGGA_DATA.latitude 
+                    = value;
+            } 
+        }
+        public float longitude
+        {
+            set
+            {
+                this.GPRMC_DATA.longitude
+                    = this.GPGGA_DATA.longitude
+                    = value;
+            }
+        }
+        #endregion
 
-        public float latitude { set{this._latitude = value;} }
-        public float longitude { set{this._longitude = value;} }
-        public float altitude { set{this._altitude = value;} }
-        public float geoidLevel { set{this._geoidLevel = value;} }
-        public int satelliteNum { set{this._satelliteNum = value;} }
-        public float hdop { set{this._hdop = value;} }
-        
+        #region GPRMC
+        public struct GPRMC_DATA_STRUCT
+        {
+            public bool status;                     // 0 : available, 1 : warning
+            public float latitude;
+            public float longitude;
+            public float groundSpeed;               // 000.0 ~ 999.9 [knot]
+            public float directionOfMovement;       // 000.0 ~ 359.9 [deg]
+        }
+        public GPRMC_DATA_STRUCT GPRMC_DATA;
+
+        public string GPRMC()
+        {
+            string ret = "$GPRMC,";
+            
+            // Update UTC time
+            AddUTCTime(ref ret);
+
+            // Update status
+            ret += GPRMC_DATA.status ?"V":"A";
+            ret += ",";
+
+            // Update latitude
+            AddLatitude(ref ret, GPRMC_DATA.latitude);
+
+            // Update longitude
+            AddLongitude(ref ret, GPRMC_DATA.longitude);
+
+            // Update ground speed;
+            ret += GPRMC_DATA.groundSpeed.ToString("000.0");
+            ret += ",";
+
+            // Update direction of movement
+            ret += GPRMC_DATA.directionOfMovement.ToString("000.0");
+            ret += ",";
+
+            // Update UTC date
+            AddUTCDate(ref ret);
+
+            // Update angular difference between magnetice north and due north (in this case, empty)
+            ret += ",,";
+
+            // Update mode
+            ret += "N";
+
+            // Update checksum
+            AddChecksum(ref ret);
+
+            // Insert CR LF
+            ret += "\r\n";
+
+            return ret;
+        }
+        #endregion
+
+        #region GPGGA
+        public enum GPGGA_QUALITY
+        {
+            NONE = 0,
+            SPS = 1,
+            DIFFERENTIAL_GPS = 2
+        }
+
+        public struct GPGGA_DATA_STRUCT
+        {
+            public float latitude;
+            public float longitude;
+            public GPGGA_QUALITY quality;
+            public uint satelliteNum;
+            public float hdop;
+            public float altitude;
+            public float geoidLevel;
+        }
+        public GPGGA_DATA_STRUCT GPGGA_DATA;
+
         public string GPGGA()
         {
             string ret = "$GPGGA,";
-            // Update UTC Time
+
+            // Update UTC time
+            AddUTCTime(ref ret);
+
+            // Update latitude
+            AddLatitude(ref ret, GPGGA_DATA.latitude);
+
+            // Update longitude
+            AddLongitude(ref ret, GPGGA_DATA.longitude);
+
+            // Update quality
+            ret += ((int)GPGGA_DATA.quality).ToString();
+            ret += ",";
+
+            // Update number of satellites
+            ret += GPGGA_DATA.satelliteNum.ToString("D02");
+            ret += ",";
+
+            // Update HDOP
+            ret += GPGGA_DATA.hdop.ToString();
+            ret += ",";
+
+            // Update altitude
+            ret += GPGGA_DATA.altitude.ToString();
+            ret += ",M,";
+
+            // Update geoid level
+            ret += Math.Round(GPGGA_DATA.geoidLevel, 1).ToString();
+            ret += ",M,";
+
+            // Update DGPS data (in this case, empty)
+            ret += ",";
+
+            // Update differential reference point ID
+            ret += "0000";
+
+            // Update checksum
+            AddChecksum(ref ret);
+
+            // Insert CR LF
+            ret += "\r\n";
+
+            return ret;
+        }
+        #endregion
+
+        #region private func
+
+        private void AddUTCDate(ref string ret)
+        {
+            ret += DateTime.UtcNow.Day.ToString("DO2");
+            ret += DateTime.UtcNow.Month.ToString("DO2");
+            ret += DateTime.UtcNow.Year.ToString("DO2");
+            ret += ",";
+        }
+        private void AddUTCTime(ref string ret)
+        {
             ret += DateTime.UtcNow.Hour.ToString("D02");
             ret += DateTime.UtcNow.Minute.ToString("D02");
             ret += DateTime.UtcNow.Second.ToString("D02");
             ret += ".";
             ret += DateTime.UtcNow.Millisecond.ToString("D3");
             ret += ",";
+        }
 
-            // Update Latitude
-            float latitude = this._latitude;
-            if(latitude < 0)
-                latitude = -latitude;
-            ret += (latitude*1e2).ToString();
+        private void AddLatitude(ref string ret, float latitude)
+        {
+            ret += ((latitude<0?-latitude:latitude) * 1e2).ToString();
             ret += ",";
-            if(this._latitude >= 0)
+            if (latitude >= 0)
                 ret += "N";
             else
                 ret += "S";
             ret += ",";
-            
-            // Update Longitude
-            float longitude = this._longitude;
-            if(longitude < 0)
-                longitude = -longitude;
-            ret += (longitude*1e2).ToString();
+        }
+        private void AddLongitude(ref string ret, float longitude)
+        {
+            ret += ((longitude<0?-longitude:longitude) * 1e2).ToString();
             ret += ",";
-            if(this._longitude >= 0)
+            if (longitude >= 0)
                 ret += "E";
             else
                 ret += "W";
             ret += ",";
-            
-            // Update quality
-            ret += "1";
-            ret += ",";
+        }
 
-            // Update number of satellites
-            ret += this._satelliteNum.ToString("D02");
-            ret += ",";
-
-            // Update HDOP
-            ret += this._hdop.ToString();
-            ret += ",";
-
-            // Update altitude
-            ret += this._altitude.ToString();
-            ret += ",";
-            ret += "M";
-            ret += ",";
-
-            // Update geoid level
-            ret += Math.Round(this._geoidLevel,1).ToString();
-            ret += ",";
-            ret += "M";
-            ret += ",";
-
-            // Update DGPS data (in this case, empty)
-            ret += ",";
-            ret += "0000";
-
-            // Update checksum
+        private void AddChecksum(ref string ret)
+        {
             byte checksum = 0;
-            for(int i=1; i<ret.Length; i++)
+            for (int i = 1; i < ret.Length; i++)
                 checksum ^= (byte)ret[i];
             ret += "*";
             ret += checksum.ToString("X2");
-
-            // Insert CR LF
-            ret += "\r\n";
-            
-            return ret;
         }
+        #endregion
     }
 }

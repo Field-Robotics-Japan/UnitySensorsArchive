@@ -9,7 +9,7 @@ namespace FRJ.Sensor
         [SerializeField] private double _baseLatitude = 35.71020206575301;      // 基地局の緯度 [m]
         [SerializeField] private double _baseLongitude = 139.81070039691542;    // 基地局の経度 [m]
         [SerializeField] private double _baseAltitude = 3.0;                    // 基地局の標高（海抜高さ）[m]
-        [SerializeField] private int    _satelliteNum = 8;                      // 使用衛星数
+        [SerializeField] private uint   _satelliteNum = 8;                      // 使用衛星数
         [SerializeField] private double _HDOP = 1.0;                            // 水平精度低下率
         [SerializeField] private double _geoidHeight = 36.7071;                 // ジオイド高 [m]
         [SerializeField] private float _updateRate = 10f; 
@@ -17,13 +17,16 @@ namespace FRJ.Sensor
         private double _latitude;   // 緯度 [m]
         private double _longitude;  // 経度 [m]
         private double _altitude;   // 標高 [m]
-        // private string _gprmc;      // GPRMC message
-        private string _gpgga;      // GPGGA message
+
+        [Header("Informations(No need to input)")]
+        [SerializeField] private string _gprmc;      // GPRMC message
+        [SerializeField] private string _gpgga;      // GPGGA message
         // private string _gpvtg;      // GPVTG message
         // private string _gphdt;      // GPHDT message
 
         public float updateRate{ get => this._updateRate; }
-        // public string gprmc { get => this._gprmc; }
+        
+        public string gprmc { get => this._gprmc; }
         public string gpgga { get => this._gpgga; }
         // public string gpvtg { get => this._gpvtg; }
         // public string gphdt { get => this._gphdt; }
@@ -35,9 +38,9 @@ namespace FRJ.Sensor
         {
             this._gc = new GeoCoordinate(this._baseLatitude, this._baseLongitude);
             this._serializer = new NMEASerializer();
-            this._serializer.geoidLevel = (float)this._geoidHeight;
-            this._serializer.satelliteNum = this._satelliteNum;
-            this._serializer.hdop = (float)this._HDOP;
+            this._serializer.GPGGA_DATA.geoidLevel = (float)this._geoidHeight;
+            this._serializer.GPGGA_DATA.satelliteNum = this._satelliteNum;
+            this._serializer.GPGGA_DATA.hdop = (float)this._HDOP;
         }
 
         public void updateGPS()
@@ -47,8 +50,9 @@ namespace FRJ.Sensor
 
             this._serializer.latitude = (float)this._latitude;
             this._serializer.longitude = (float)this._longitude;
-            this._serializer.altitude = (float)this._altitude;
-            
+            this._serializer.GPGGA_DATA.altitude = (float)this._altitude;
+
+            this._gprmc = this._serializer.GPRMC();
             this._gpgga = this._serializer.GPGGA();
         }
     }
