@@ -12,7 +12,7 @@ namespace FRJ.Sensor
         [SerializeField] private double _baseLatitude = 35.71020206575301;      // 基地局の緯度
         [SerializeField] private double _baseLongitude = 139.81070039691542;    // 基地局の経度
         [SerializeField] private double _baseAltitude = 3.0;                    // 基地局の標高（海抜高さ）[m]
-        [SerializeField] private NMEASerializer.GPS_MODE _gps_mode = NMEASerializer.GPS_MODE.NONE;
+        [SerializeField] private NMEASerializer.GPS_MODE _gps_mode = NMEASerializer.GPS_MODE.AUTONOMOUS;
         [SerializeField] private float _HDOP = 1.0f;                            // 水平精度低下率
         [HideInInspector] public float updateRate { get => this._updateRate; }
         #endregion
