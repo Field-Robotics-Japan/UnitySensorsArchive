@@ -9,6 +9,7 @@ namespace FRJ.Sensor
         #region Header("General")
         [Header("General")]
         [SerializeField] private float _updateRate = 10f;
+        [SerializeField] private NMEASerializer.TIME_MODE _timeMode = NMEASerializer.TIME_MODE.SIM;
         [SerializeField] private double _baseLatitude = 35.71020206575301;      // 基地局の緯度
         [SerializeField] private double _baseLongitude = 139.81070039691542;    // 基地局の経度
         [SerializeField] private double _baseAltitude = 3.0;                    // 基地局の標高（海抜高さ）[m]
@@ -89,12 +90,14 @@ namespace FRJ.Sensor
             // GPRMC
             this._serializer.GPRMC_DATA.status = this._gprmc_status;
             this._serializer.GPRMC_DATA.mode = this._gps_mode;
+            this._serializer.GPRMC_DATA.time_mode = this._timeMode;
 
             // GPGGA
             this._serializer.GPGGA_DATA.quality = this._gpgga_quality;
             this._serializer.GPGGA_DATA.satelliteNum = this._gpgga_satelliteNum;
             this._serializer.GPGGA_DATA.hdop = this._HDOP;
             this._serializer.GPGGA_DATA.geoidLevel = this._gpgga_geoidHeight;
+            this._serializer.GPGGA_DATA.time_mode = this._timeMode;
 
             // GPGSA
             this._serializer.GPGSA_DATA.mode = this._gpgsa_mode;

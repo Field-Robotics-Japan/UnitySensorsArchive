@@ -16,6 +16,11 @@ namespace FRJ.Sensor
             DIFFERENTIAL,
             ESTIMATED
         }
+        public enum TIME_MODE
+        {
+            SIM,
+            UTC
+        }
 
         #region properties
         public float latitude { 
@@ -47,6 +52,7 @@ namespace FRJ.Sensor
             public float groundSpeed;               // 000.0 ~ 999.9 [knot]
             public float directionOfMovement;       // 000.0 ~ 359.9 [deg]
             public GPS_MODE mode;
+            public TIME_MODE time_mode;
         }
         [SerializeField] public GPRMC_DATA_STRUCT GPRMC_DATA;
 
@@ -54,9 +60,17 @@ namespace FRJ.Sensor
         {
             string ret = "$GPRMC,";
             
-            // Update UTC time
-            AddUTCTime(ref ret);
-
+            // Update time 
+            switch(GPRMC_DATA.time_mode)
+            {
+            case TIME_MODE.SIM:
+            	 AddSimTime(ref ret);
+            	 break;
+            case TIME_MODE.UTC:
+                AddUTCTime(ref ret);
+                break;
+            };
+            
             // Update status
             ret += GPRMC_DATA.status ?"V":"A";
             ret += ",";
@@ -126,15 +140,24 @@ namespace FRJ.Sensor
             public float hdop;
             public float altitude;
             public float geoidLevel;
+            public TIME_MODE time_mode;
         }
         [SerializeField] public GPGGA_DATA_STRUCT GPGGA_DATA;
 
         public string GPGGA()
         {
             string ret = "$GPGGA,";
-
-            // Update UTC time
-            AddUTCTime(ref ret);
+            
+            // Update time 
+            switch(GPGGA_DATA.time_mode)
+            {
+            case TIME_MODE.SIM:
+            	 AddSimTime(ref ret);
+            	 break;
+            case TIME_MODE.UTC:
+                AddUTCTime(ref ret);
+                break;
+            };
 
             // Update latitude
             AddLatitude(ref ret, GPGGA_DATA.latitude);
@@ -324,7 +347,20 @@ namespace FRJ.Sensor
             ret += DateTime.UtcNow.Millisecond.ToString("D3");
             ret += ",";
         }
-
+        private void AddSimTime(ref string ret)
+        {
+            uint raw_sec = (uint)Math.Truncate(Time.time);
+            uint hour = raw_sec/3600;
+            uint min = (raw_sec-(3600*hour))/60;
+            uint sec = raw_sec-(3600*hour)-(60*min);
+            uint millisec = (uint)( (Time.time % 1)*1e+3 );
+            ret += hour.ToString("D02");
+            ret += min.ToString("D02");
+            ret += sec.ToString("D02");
+            ret += ".";
+            ret += millisec.ToString("D3");
+            ret += ",";
+        }
         private void AddLatitude(ref string ret, float latitude)
         {
             ret += ((latitude<0?-latitude:latitude) * 1e2).ToString();
