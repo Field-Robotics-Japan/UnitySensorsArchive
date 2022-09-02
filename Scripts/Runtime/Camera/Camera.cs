@@ -26,6 +26,9 @@ namespace FRJ.Sensor
 
         [SerializeField, Range(0.01f, 1000.0f)] private float _minDistance = 0.3f;
         [SerializeField, Range(0.01f, 1000.0f)] private float _maxDistance = 1000.0f;
+
+        public Vector2Int resolution { get => this._resolution; }
+
         [Header("Informations(No need to input)")]
 
         // Render Textures
@@ -45,6 +48,13 @@ namespace FRJ.Sensor
         private float[] _colorArrayData_r;
         private float[] _colorArrayData_g;
         private float[] _colorArrayData_b;
+
+        public float[] pointArrayData_x { get => this._pointArrayData_x; }
+        public float[] pointArrayData_y { get => this._pointArrayData_y; }
+        public float[] pointArrayData_z { get => this._pointArrayData_z; }
+        public float[] colorArrayData_r { get => this._colorArrayData_r; }
+        public float[] colorArrayData_g { get => this._colorArrayData_g; }
+        public float[] colorArrayData_b { get => this._colorArrayData_b; }
 
         [HideInInspector] public bool isInit = false;
 
@@ -110,9 +120,9 @@ namespace FRJ.Sensor
             _depthShader.SetBuffer(0, "_pointArray_x", _pointArray_x);
             _depthShader.SetBuffer(0, "_pointArray_y", _pointArray_y);
             _depthShader.SetBuffer(0, "_pointArray_z", _pointArray_z);
-            _depthShader.SetBuffer(0, "_colorArray_x", _colorArray_r);
-            _depthShader.SetBuffer(0, "_colorArray_y", _colorArray_g);
-            _depthShader.SetBuffer(0, "_colorArray_z", _colorArray_b);
+            _depthShader.SetBuffer(0, "_colorArray_r", _colorArray_r);
+            _depthShader.SetBuffer(0, "_colorArray_g", _colorArray_g);
+            _depthShader.SetBuffer(0, "_colorArray_b", _colorArray_b);
 
             isInit = true;
         }
@@ -136,6 +146,9 @@ namespace FRJ.Sensor
             _pointArray_x.GetData(_pointArrayData_x);
             _pointArray_y.GetData(_pointArrayData_y);
             _pointArray_z.GetData(_pointArrayData_z);
+            _colorArray_r.GetData(_colorArrayData_r);
+            _colorArray_g.GetData(_colorArrayData_g);
+            _colorArray_b.GetData(_colorArrayData_b);
         }
 
     }
