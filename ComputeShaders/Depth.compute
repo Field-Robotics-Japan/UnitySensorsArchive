@@ -16,19 +16,17 @@ Texture2D<float4> _colorBuffer;
 RWStructuredBuffer<float> _pointArray_x;
 RWStructuredBuffer<float> _pointArray_y;
 RWStructuredBuffer<float> _pointArray_z;
-RWStructuredBuffer<float> _pointArray_r;
-RWStructuredBuffer<float> _pointArray_g;
-RWStructuredBuffer<float> _pointArray_b;
+RWStructuredBuffer<float> _colorArray_r;
+RWStructuredBuffer<float> _colorArray_g;
+RWStructuredBuffer<float> _colorArray_b;
 
 [numthreads(8,8,1)]
 void CSMain (uint3 id : SV_DispatchThreadID)
 {
 	_pointArray_x[id.x + id.y * width] = -1.0f / (n_f * _depthBuffer[id.xy] + f)*(width_2 - id.x)/(vDisW);
 	_pointArray_y[id.x + id.y * width] = -1.0f / (n_f * _depthBuffer[id.xy] + f)*(height_2 - id.y)/(vDisH);
-	//_pointArray_z[id.x + id.y * width] = 1.0f / (n_f * _depthBuffer[id.xy] + f);
-	_pointArray_z[id.y+id.y*width] = _colorBuffer[id.xy].z;
-	//_pointArray_r[id.x + id.y * width] = _colorBuffer[id.xy].x;
-	//_pointArray_g[id.x + id.y * width] = _colorBuffer[id.xy].y;
-	//_pointArray_b[id.x + id.y * width] = _colorBuffer[id.xy].z;
-	// x=>r y=>g
+	_pointArray_z[id.x + id.y * width] = 1.0f / (n_f * _depthBuffer[id.xy] + f);
+	_colorArray_r[id.x + id.y * width] = _colorBuffer[id.xy].x;
+	_colorArray_g[id.x + id.y * width] = _colorBuffer[id.xy].y;
+	_colorArray_b[id.x + id.y * width] = _colorBuffer[id.xy].z;
 }

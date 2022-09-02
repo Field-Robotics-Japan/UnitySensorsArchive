@@ -36,9 +36,15 @@ namespace FRJ.Sensor
         private ComputeBuffer _pointArray_x;
         private ComputeBuffer _pointArray_y;
         private ComputeBuffer _pointArray_z;
+        private ComputeBuffer _colorArray_r;
+        private ComputeBuffer _colorArray_g;
+        private ComputeBuffer _colorArray_b;
         private float[] _pointArrayData_x;
         private float[] _pointArrayData_y;
         private float[] _pointArrayData_z;
+        private float[] _colorArrayData_r;
+        private float[] _colorArrayData_g;
+        private float[] _colorArrayData_b;
 
         [HideInInspector] public bool isInit = false;
 
@@ -79,9 +85,15 @@ namespace FRJ.Sensor
             _pointArrayData_x = new float[Screen.width * Screen.height];
             _pointArrayData_y = new float[Screen.width * Screen.height];
             _pointArrayData_z = new float[Screen.width * Screen.height];
+            _colorArrayData_r = new float[Screen.width * Screen.height];
+            _colorArrayData_g = new float[Screen.width * Screen.height];
+            _colorArrayData_b = new float[Screen.width * Screen.height];
             _pointArray_x = new ComputeBuffer(_pointArrayData_x.Length, sizeof(float));
             _pointArray_y = new ComputeBuffer(_pointArrayData_y.Length, sizeof(float));
             _pointArray_z = new ComputeBuffer(_pointArrayData_z.Length, sizeof(float));
+            _colorArray_r = new ComputeBuffer(_colorArrayData_r.Length, sizeof(float));
+            _colorArray_g = new ComputeBuffer(_colorArrayData_g.Length, sizeof(float));
+            _colorArray_b = new ComputeBuffer(_colorArrayData_b.Length, sizeof(float));
 
             float n_inv = 1.0f / _cam.nearClipPlane;
             float f_inv = 1.0f / _cam.farClipPlane;
@@ -98,6 +110,9 @@ namespace FRJ.Sensor
             _depthShader.SetBuffer(0, "_pointArray_x", _pointArray_x);
             _depthShader.SetBuffer(0, "_pointArray_y", _pointArray_y);
             _depthShader.SetBuffer(0, "_pointArray_z", _pointArray_z);
+            _depthShader.SetBuffer(0, "_colorArray_x", _colorArray_r);
+            _depthShader.SetBuffer(0, "_colorArray_y", _colorArray_g);
+            _depthShader.SetBuffer(0, "_colorArray_z", _colorArray_b);
 
             isInit = true;
         }
