@@ -177,7 +177,7 @@ namespace FRJ.Sensor
                 tmp[2] = _data_pc[i + 10];
                 tmp[3] = _data_pc[i + 11];
                 z = BitConverter.ToSingle(tmp, 0);
-                Gizmos.DrawSphere(this.transform.position + new Vector3(x, y, z), _pointSize);
+                Gizmos.DrawSphere(this.transform.position + new Vector3(-x, z, y), _pointSize);
             }
         }
 #endif

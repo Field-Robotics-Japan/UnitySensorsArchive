@@ -38,9 +38,9 @@ void CSMain (uint3 id : SV_DispatchThreadID)
 	float result = sign * pow(2, exponent - 23.0f) * mantissa;
 	
 	/* Coordinnate Calculation */
-	_data[index + 0] = -0.5f / (n_f * _depthBuffer[id.xy] + f) * ((float)width - id.x * 2) / (vDisW);
-	_data[index + 1] = -0.5f / (n_f * _depthBuffer[id.xy] + f) * ((float)height - id.y * 2) / (vDisH);
-	_data[index + 2] = +1.0f / (n_f * _depthBuffer[id.xy] + f);
+	_data[index + 0] = +0.5f / (n_f * _depthBuffer[id.xy] + f) * ((float)width - id.x * 2) / (vDisW);
+	_data[index + 1] = +1.0f / (n_f * _depthBuffer[id.xy] + f);
+	_data[index + 2] = -0.5f / (n_f * _depthBuffer[id.xy] + f) * ((float)height - id.y * 2) / (vDisH);
 	
 	/* Color */
 	_data[index + 3] = result;
