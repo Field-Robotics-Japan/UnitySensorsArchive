@@ -31,9 +31,9 @@ void CSMain (uint3 id : SV_DispatchThreadID)
 	else sign = -1.0f;
 
 	float exponent = 2.0f * (a % 128) - 126.0f;
-	if(b < 128.0f)exponent-=1.0f;
+	if(r < 128.0f)exponent-=1.0f;
 
-	float mantissa = (b % 128) * 65536.0f + g * 256.0f + r + ((float)0x800000); 
+	float mantissa = (r % 128) * 65536.0f + g * 256.0f + b + ((float)0x800000); 
 
 	float result = sign * pow(2, exponent - 23.0f) * mantissa;
 	

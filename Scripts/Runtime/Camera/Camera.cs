@@ -159,7 +159,7 @@ namespace FRJ.Sensor
             if (!_drawPoints || !Application.isPlaying) return;
             for (int i = 0; i < _resolution.x * _resolution.y * 16; i += 16)
             {
-                Gizmos.color = new Color(_data_pc[i + 12] / 255.0f, _data_pc[i + 13] / 255.0f, _data_pc[i + 14] / 255.0f);
+                Gizmos.color = new Color(_data_pc[i + 14] / 255.0f, _data_pc[i + 13] / 255.0f, _data_pc[i + 12] / 255.0f);
                 byte[] tmp = new byte[4];
                 float x, y, z;
                 tmp[0] = _data_pc[i + 0];
