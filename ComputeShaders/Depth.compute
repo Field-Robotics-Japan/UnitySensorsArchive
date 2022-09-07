@@ -11,6 +11,7 @@ float vDisH;
 
 Texture2D<float> _depthBuffer;
 Texture2D<float4> _colorBuffer;
+StructuredBuffer<float> _noise;
 
 RWStructuredBuffer<float> _data;
 
@@ -18,7 +19,7 @@ RWStructuredBuffer<float> _data;
 void CSMain (uint3 id : SV_DispatchThreadID)
 {
 	/* Index Calculation */
-	int index = (id.x + id.y * width) * 4;
+	int index = id.x + id.y * width;
 
 	/* Color Data Compression */
 	int a = 126;
@@ -38,10 +39,15 @@ void CSMain (uint3 id : SV_DispatchThreadID)
 	float result = sign * pow(2, exponent - 23.0f) * mantissa;
 	
 	/* Coordinnate Calculation */
-	_data[index + 0] = -0.5f / (n_f * _depthBuffer[id.xy] + f) * ((float)width - id.x * 2) / (vDisW);
-	_data[index + 1] = +1.0f / (n_f * _depthBuffer[id.xy] + f);
-	_data[index + 2] = -0.5f / (n_f * _depthBuffer[id.xy] + f) * ((float)height - id.y * 2) / (vDisH);
+	_data[index*4 + 0] = -0.5f / (n_f * _depthBuffer[id.xy] + f) * ((float)width - id.x * 2) / (vDisW);
+	_data[index*4 + 1] = +1.0f / (n_f * _depthBuffer[id.xy] + f);
+	_data[index*4 + 2] = -0.5f / (n_f * _depthBuffer[id.xy] + f) * ((float)height - id.y * 2) / (vDisH);
+
+	float noise_dist = _noise[index]/(_data[index * 4] * _data[index * 4] + _data[index * 4 + 1] * _data[index * 4 + 1] + _data[index * 4 + 2] * _data[index * 4 + 2]);
+	_data[index*4 + 0] += noise_dist * _data[index * 4 + 0] * _data[index * 4 + 0];
+	_data[index*4 + 1] += noise_dist * _data[index * 4 + 1] * _data[index * 4 + 1];
+	_data[index*4 + 2] += noise_dist * _data[index * 4 + 2] * _data[index * 4 + 2];
 	
 	/* Color */
-	_data[index + 3] = result;
+	_data[index*4 + 3] = result;
 }

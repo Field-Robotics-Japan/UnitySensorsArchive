@@ -29,6 +29,8 @@ namespace FRJ.Sensor
         [SerializeField, Range(0.02f, 1000.0f)] private float _minDistance = 0.3f;
         [SerializeField, Range(0.02f, 1000.0f)] private float _maxDistance = 1000.0f;
 
+        [SerializeField] private float _noise_sigma = 1.0f;
+
         [SerializeField] private float _scanRate = 20.0f;
 
 #if UNITY_EDITOR
@@ -40,6 +42,7 @@ namespace FRJ.Sensor
         public float scanRate { get => this._scanRate; }
 
         [HideInInspector] public bool isInit = false;
+        [HideInInspector] public bool useImage = false;
 
         [Header("Informations(No need to input)")]
 
@@ -47,8 +50,12 @@ namespace FRJ.Sensor
         private RenderTexture _rt_color = null;
         private RenderTexture _rt_depth = null;
 
+        // Noise
+        private ComputeBuffer _noiseCB;
+        private float[] _noise = null;
+
         // Texutre2D
-        private Texture2D _tex2d;
+        private Texture2D _tex_img;
 
         // Results
         private ComputeBuffer _dataCB;
@@ -94,9 +101,12 @@ namespace FRJ.Sensor
             if (isInit) return;
             _rt_color = new RenderTexture(_resolution.x, _resolution.y, 0, RenderTextureFormat.ARGB32);
             _rt_depth = new RenderTexture(_resolution.x, _resolution.y, 32, RenderTextureFormat.Depth);
+            
+            _noise = new float[_resolution.x* _resolution.y];
+            _noiseCB = new ComputeBuffer(_resolution.x * _resolution.y, sizeof(float));
 
-            _tex2d = new Texture2D(_resolution.x, _resolution.y);
-            _tex2d.Apply();
+            _tex_img = new Texture2D(_resolution.x, _resolution.y);
+            _tex_img.Apply();
 
             _cam.SetTargetBuffers(_rt_color.colorBuffer, _rt_depth.depthBuffer);
 
@@ -117,7 +127,8 @@ namespace FRJ.Sensor
             _depthShader.SetFloat("vDisH", _resolution.x * 0.5f / Mathf.Tan(_cam.fieldOfView * 0.5f * Mathf.Deg2Rad));
             _depthShader.SetTexture(0, "_depthBuffer", _rt_depth);
             _depthShader.SetTexture(0, "_colorBuffer", _rt_color);
-
+            
+            _depthShader.SetBuffer(0, "_noise", _noiseCB);
             _depthShader.SetBuffer(0, "_data", _dataCB);
 
             isInit = true;
@@ -142,6 +153,8 @@ namespace FRJ.Sensor
             if (time_now - _time_old < (1.0f / this.scanRate)) return;
             _time_old = time_now;
 
+            _noiseCB.SetData(_noise);
+
             _depthShader.Dispatch(0, _rt_depth.width / 16, _rt_color.height / 16, 1);
             _dataCB.GetData(_data_pc);
 
@@ -150,10 +163,23 @@ namespace FRJ.Sensor
                 for (int w = 0; w < _resolution.x; w++)
                 {
                     int index = h * _resolution.x + w;
-                    _tex2d.SetPixel(w, h, new Color(_data_pc[index + 12] / 255.0f, _data_pc[index + 13] / 255.0f, _data_pc[index + 14] / 255.0f));
+                    
+                    if(useImage)
+                        _tex_img.SetPixel(w, h, new Color(_data_pc[index + 12] / 255.0f, _data_pc[index + 13] / 255.0f, _data_pc[index + 14] / 255.0f));
+                    
+                    var rand2 = UnityEngine.Random.value;
+                    var rand3 = UnityEngine.Random.value;
+                    float normrand =
+                        (float)Math.Sqrt(-2.0f * Math.Log(rand2)) *
+                        (float)Math.Cos(2.0f * Math.PI * rand3);
+                    normrand *= _noise_sigma;
+                    _noise[index] = normrand;
+                    //_noise[index] = (UnityEngine.Random.value-0.5f)*_noise_sigma;
                 }
             }
-            this._data_img = this._tex2d.EncodeToJPG(this._quality);
+            
+            if(useImage)
+                this._data_img = this._tex_img.EncodeToJPG(this._quality);
         }
 #if UNITY_EDITOR
         private void OnDrawGizmos()
@@ -179,7 +205,7 @@ namespace FRJ.Sensor
                 tmp[2] = _data_pc[i + 10];
                 tmp[3] = _data_pc[i + 11];
                 z = BitConverter.ToSingle(tmp, 0);
-                Gizmos.DrawSphere(this.transform.position + new Vector3(-x, z, y), _pointSize);
+                Gizmos.DrawSphere(this.transform.position + new Vector3(x, z, y), _pointSize);
             }
         }
 #endif
