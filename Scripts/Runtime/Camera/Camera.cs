@@ -21,10 +21,11 @@ namespace FRJ.Sensor
         [SerializeField] private ComputeShader _depthShader;
 
         [SerializeField] private Vector2Int _resolution = new Vector2Int(640, 480);
-        
+        [SerializeField][Range(0, 100)] int _quality = 50;
+
         //[SerializeField, Range(0.0001f, 179.0f)] private float _verticalFOV = 60.0f;
         //[SerializeField, Range(0.0001f, 179.0f)] private float _horizontalFOV = 91.45445f;
-        
+
         [SerializeField, Range(0.02f, 1000.0f)] private float _minDistance = 0.3f;
         [SerializeField, Range(0.02f, 1000.0f)] private float _maxDistance = 1000.0f;
 
@@ -57,7 +58,7 @@ namespace FRJ.Sensor
         private float _time_old;
 
         public byte[] data_pc { get => this._data_pc; }
-        public byte[] data_ig { get => this._data_img; }
+        public byte[] data_img { get => this._data_img; }
 
         #region FOV settings
         private float _vFOV_old;
@@ -152,6 +153,7 @@ namespace FRJ.Sensor
                     _tex2d.SetPixel(w, h, new Color(_data_pc[index + 12] / 255.0f, _data_pc[index + 13] / 255.0f, _data_pc[index + 14] / 255.0f));
                 }
             }
+            this._data_img = this._tex2d.EncodeToJPG(this._quality);
         }
 #if UNITY_EDITOR
         private void OnDrawGizmos()
