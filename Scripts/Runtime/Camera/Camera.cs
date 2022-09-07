@@ -21,26 +21,51 @@ namespace FRJ.Sensor
         [SerializeField] private ComputeShader _depthShader;
 
         [SerializeField] private Vector2Int _resolution = new Vector2Int(640, 480);
-        [SerializeField, Range(0.0001f, 179.0f)] private float _verticalFOV = 60.0f;
-        [SerializeField, Range(0.0001f, 179.0f)] private float _horizontalFOV = 91.45445f;
+        [SerializeField][Range(0, 100)] int _quality = 50;
 
-        [SerializeField, Range(0.01f, 1000.0f)] private float _minDistance = 0.3f;
-        [SerializeField, Range(0.01f, 1000.0f)] private float _maxDistance = 1000.0f;
+        //[SerializeField, Range(0.0001f, 179.0f)] private float _verticalFOV = 60.0f;
+        //[SerializeField, Range(0.0001f, 179.0f)] private float _horizontalFOV = 91.45445f;
+
+        [SerializeField, Range(0.02f, 1000.0f)] private float _minDistance = 0.3f;
+        [SerializeField, Range(0.02f, 1000.0f)] private float _maxDistance = 1000.0f;
+
+        [SerializeField] private float _noise_sigma = 1.0f;
+
+        [SerializeField] private float _scanRate = 20.0f;
+
+#if UNITY_EDITOR
+        [SerializeField] private bool _drawPoints;
+        [SerializeField, Range(0.0f, 1.0f)] private float _pointSize = 0.1f;
+#endif
+
+        public Vector2Int resolution { get => this._resolution; }
+        public float scanRate { get => this._scanRate; }
+
+        [HideInInspector] public bool isInit = false;
+        [HideInInspector] public bool useImage = false;
+
         [Header("Informations(No need to input)")]
 
         // Render Textures
         private RenderTexture _rt_color = null;
         private RenderTexture _rt_depth = null;
 
-        // Results
-        private ComputeBuffer _pointArray_x;
-        private ComputeBuffer _pointArray_y;
-        private ComputeBuffer _pointArray_z;
-        private float[] _pointArrayData_x;
-        private float[] _pointArrayData_y;
-        private float[] _pointArrayData_z;
+        // Noise
+        private ComputeBuffer _noiseCB;
+        private float[] _noise = null;
 
-        [HideInInspector] public bool isInit = false;
+        // Texutre2D
+        private Texture2D _tex_img;
+
+        // Results
+        private ComputeBuffer _dataCB;
+        private byte[] _data_pc;    // PointCloud
+        private byte[] _data_img;   // JPEG Image
+
+        private float _time_old;
+
+        public byte[] data_pc { get => this._data_pc; }
+        public byte[] data_img { get => this._data_img; }
 
         #region FOV settings
         private float _vFOV_old;
@@ -48,6 +73,7 @@ namespace FRJ.Sensor
 
         public float aspect { get => this._cam.aspect; }
 
+        /*
         private void UpdateFOV()
         {
             if (!_cam) return;
@@ -64,40 +90,46 @@ namespace FRJ.Sensor
             if (!_cam) return;
             _cam.ResetAspect();
             _cam.fieldOfView = _verticalFOV;
-            _horizontalFOV = Mathf.Atan(Mathf.Tan(_verticalFOV * 0.5f * Mathf.Deg2Rad) * Screen.width / Screen.height) * Mathf.Rad2Deg * 2.0f;
+            _horizontalFOV = _verticalFOV*_cam.aspect;//Mathf.Atan(Mathf.Tan(_verticalFOV * 0.5f * Mathf.Deg2Rad) * Screen.width / Screen.height) * Mathf.Rad2Deg * 2.0f;
+            UpdateFOV();
         }
+        */
         #endregion
 
         public void Init()
         {
             if (isInit) return;
-            _rt_color = new RenderTexture(Screen.width, Screen.height, 0, RenderTextureFormat.ARGB32);
-            _rt_depth = new RenderTexture(Screen.width, Screen.height, 32, RenderTextureFormat.Depth);
+            _rt_color = new RenderTexture(_resolution.x, _resolution.y, 0, RenderTextureFormat.ARGB32);
+            _rt_depth = new RenderTexture(_resolution.x, _resolution.y, 32, RenderTextureFormat.Depth);
+            
+            _noise = new float[_resolution.x* _resolution.y];
+            _noiseCB = new ComputeBuffer(_resolution.x * _resolution.y, sizeof(float));
+
+            _tex_img = new Texture2D(_resolution.x, _resolution.y);
+            _tex_img.Apply();
 
             _cam.SetTargetBuffers(_rt_color.colorBuffer, _rt_depth.depthBuffer);
 
-            _pointArrayData_x = new float[Screen.width * Screen.height];
-            _pointArrayData_y = new float[Screen.width * Screen.height];
-            _pointArrayData_z = new float[Screen.width * Screen.height];
-            _pointArray_x = new ComputeBuffer(_pointArrayData_x.Length, sizeof(float));
-            _pointArray_y = new ComputeBuffer(_pointArrayData_y.Length, sizeof(float));
-            _pointArray_z = new ComputeBuffer(_pointArrayData_z.Length, sizeof(float));
+            _data_pc = new byte[_resolution.x * _resolution.y * 16];
+            _dataCB = new ComputeBuffer(_resolution.x * _resolution.y * 4, sizeof(float));
+
+            _cam.nearClipPlane = _minDistance - 0.01f;
+            _cam.farClipPlane = _maxDistance + 0.01f;
 
             float n_inv = 1.0f / _cam.nearClipPlane;
             float f_inv = 1.0f / _cam.farClipPlane;
 
             _depthShader.SetFloat("n_f", n_inv - f_inv);
             _depthShader.SetFloat("f", f_inv);
-            _depthShader.SetInt("width", Screen.width);
-            _depthShader.SetInt("width_2",  Screen.width / 2);
-            _depthShader.SetInt("height_2", Screen.height / 2);
-            _depthShader.SetFloat("vDisW", Screen.width * 0.5f / Mathf.Tan(_horizontalFOV * 0.5f * Mathf.Deg2Rad));
-            _depthShader.SetFloat("vDisH", Screen.height * 0.5f / Mathf.Tan(_verticalFOV * 0.5f * Mathf.Deg2Rad));
+            _depthShader.SetInt("width", _resolution.x);
+            _depthShader.SetInt("height", _resolution.y);
+            _depthShader.SetFloat("vDisW", _resolution.x * 0.5f / Mathf.Tan(_cam.fieldOfView * _cam.aspect * 0.5f * Mathf.Deg2Rad));
+            _depthShader.SetFloat("vDisH", _resolution.x * 0.5f / Mathf.Tan(_cam.fieldOfView * 0.5f * Mathf.Deg2Rad));
             _depthShader.SetTexture(0, "_depthBuffer", _rt_depth);
             _depthShader.SetTexture(0, "_colorBuffer", _rt_color);
-            _depthShader.SetBuffer(0, "_pointArray_x", _pointArray_x);
-            _depthShader.SetBuffer(0, "_pointArray_y", _pointArray_y);
-            _depthShader.SetBuffer(0, "_pointArray_z", _pointArray_z);
+            
+            _depthShader.SetBuffer(0, "_noise", _noiseCB);
+            _depthShader.SetBuffer(0, "_data", _dataCB);
 
             isInit = true;
         }
@@ -107,21 +139,76 @@ namespace FRJ.Sensor
             if (!Application.isPlaying)
             {
                 if (_maxDistance < _minDistance) _maxDistance = _minDistance;
-                UpdateFOV();
+                //UpdateFOV();
                 return;
             }
             if (!isInit) return;
-            Debug.Log(_pointArrayData_z[0]);
         }
 
         private void OnPostRender()
         {
             if (!Application.isPlaying || !isInit) return;
-            _depthShader.Dispatch(0, _rt_depth.width / 8, _rt_color.height / 8, 1);
-            _pointArray_x.GetData(_pointArrayData_x);
-            _pointArray_y.GetData(_pointArrayData_y);
-            _pointArray_z.GetData(_pointArrayData_z);
+
+            float time_now = Time.time;
+            if (time_now - _time_old < (1.0f / this.scanRate)) return;
+            _time_old = time_now;
+
+            _noiseCB.SetData(_noise);
+
+            _depthShader.Dispatch(0, _rt_depth.width / 16, _rt_color.height / 16, 1);
+            _dataCB.GetData(_data_pc);
+
+            for (int h = 0; h < _resolution.y; h++)
+            {
+                for (int w = 0; w < _resolution.x; w++)
+                {
+                    int index = h * _resolution.x + w;
+                    
+                    if(useImage)
+                        _tex_img.SetPixel(w, h, new Color(_data_pc[index + 12] / 255.0f, _data_pc[index + 13] / 255.0f, _data_pc[index + 14] / 255.0f));
+                    
+                    var rand2 = UnityEngine.Random.value;
+                    var rand3 = UnityEngine.Random.value;
+                    float normrand =
+                        (float)Math.Sqrt(-2.0f * Math.Log(rand2)) *
+                        (float)Math.Cos(2.0f * Math.PI * rand3);
+                    normrand *= _noise_sigma;
+                    _noise[index] = normrand;
+                    //_noise[index] = (UnityEngine.Random.value-0.5f)*_noise_sigma;
+                }
+            }
+            
+            if(useImage)
+                this._data_img = this._tex_img.EncodeToJPG(this._quality);
         }
+#if UNITY_EDITOR
+        private void OnDrawGizmos()
+        {
+            if (!_drawPoints || !Application.isPlaying) return;
+            for (int i = 0; i < _resolution.x * _resolution.y * 16; i += 16)
+            {
+                Gizmos.color = new Color(_data_pc[i + 14] / 255.0f, _data_pc[i + 13] / 255.0f, _data_pc[i + 12] / 255.0f);
+                byte[] tmp = new byte[4];
+                float x, y, z;
+                tmp[0] = _data_pc[i + 0];
+                tmp[1] = _data_pc[i + 1];
+                tmp[2] = _data_pc[i + 2];
+                tmp[3] = _data_pc[i + 3];
+                x = BitConverter.ToSingle(tmp, 0);
+                tmp[0] = _data_pc[i + 4];
+                tmp[1] = _data_pc[i + 5];
+                tmp[2] = _data_pc[i + 6];
+                tmp[3] = _data_pc[i + 7];
+                y = BitConverter.ToSingle(tmp, 0);
+                tmp[0] = _data_pc[i + 8];
+                tmp[1] = _data_pc[i + 9];
+                tmp[2] = _data_pc[i + 10];
+                tmp[3] = _data_pc[i + 11];
+                z = BitConverter.ToSingle(tmp, 0);
+                Gizmos.DrawSphere(this.transform.position + new Vector3(x, z, y), _pointSize);
+            }
+        }
+#endif
 
     }
 }
@@ -137,7 +224,7 @@ public class CameraEditor : Editor
         base.OnInspectorGUI();
         if (GUILayout.Button("Reset Aspect Ratio"))
         {
-            _cam.ResetAspectRatio();
+            //_cam.ResetAspectRatio();
             this.serializedObject.ApplyModifiedProperties();
         }
 

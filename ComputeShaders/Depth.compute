@@ -4,31 +4,50 @@ float n_f;
 float f;
 
 int width;
-int width_2;
-int height_2;
+int height;
 
 float vDisW;
 float vDisH;
 
 Texture2D<float> _depthBuffer;
 Texture2D<float4> _colorBuffer;
+StructuredBuffer<float> _noise;
 
-RWStructuredBuffer<float> _pointArray_x;
-RWStructuredBuffer<float> _pointArray_y;
-RWStructuredBuffer<float> _pointArray_z;
-RWStructuredBuffer<float> _pointArray_r;
-RWStructuredBuffer<float> _pointArray_g;
-RWStructuredBuffer<float> _pointArray_b;
+RWStructuredBuffer<float> _data;
 
-[numthreads(8,8,1)]
+[numthreads(16,16,1)]
 void CSMain (uint3 id : SV_DispatchThreadID)
 {
-	_pointArray_x[id.x + id.y * width] = -1.0f / (n_f * _depthBuffer[id.xy] + f)*(width_2 - id.x)/(vDisW);
-	_pointArray_y[id.x + id.y * width] = -1.0f / (n_f * _depthBuffer[id.xy] + f)*(height_2 - id.y)/(vDisH);
-	//_pointArray_z[id.x + id.y * width] = 1.0f / (n_f * _depthBuffer[id.xy] + f);
-	_pointArray_z[id.y+id.y*width] = _colorBuffer[id.xy].z;
-	//_pointArray_r[id.x + id.y * width] = _colorBuffer[id.xy].x;
-	//_pointArray_g[id.x + id.y * width] = _colorBuffer[id.xy].y;
-	//_pointArray_b[id.x + id.y * width] = _colorBuffer[id.xy].z;
-	// x=>r y=>g
+	/* Index Calculation */
+	int index = id.x + id.y * width;
+
+	/* Color Data Compression */
+	int a = 126;
+	int r = (int)(_colorBuffer[id.xy].x * 255);
+	int g = (int)(_colorBuffer[id.xy].y * 255);
+	int b = (int)(_colorBuffer[id.xy].z * 255);
+
+	float sign;
+	if(a < 128.0f) sign = 1.0f;
+	else sign = -1.0f;
+
+	float exponent = 2.0f * (a % 128) - 126.0f;
+	if(r < 128.0f)exponent-=1.0f;
+
+	float mantissa = (r % 128) * 65536.0f + g * 256.0f + b + ((float)0x800000); 
+
+	float result = sign * pow(2, exponent - 23.0f) * mantissa;
+	
+	/* Coordinnate Calculation */
+	_data[index*4 + 0] = -0.5f / (n_f * _depthBuffer[id.xy] + f) * ((float)width - id.x * 2) / (vDisW);
+	_data[index*4 + 1] = +1.0f / (n_f * _depthBuffer[id.xy] + f);
+	_data[index*4 + 2] = -0.5f / (n_f * _depthBuffer[id.xy] + f) * ((float)height - id.y * 2) / (vDisH);
+
+	float noise_dist = _noise[index]/(_data[index * 4] * _data[index * 4] + _data[index * 4 + 1] * _data[index * 4 + 1] + _data[index * 4 + 2] * _data[index * 4 + 2]);
+	_data[index*4 + 0] += noise_dist * _data[index * 4 + 0] * _data[index * 4 + 0];
+	_data[index*4 + 1] += noise_dist * _data[index * 4 + 1] * _data[index * 4 + 1];
+	_data[index*4 + 2] += noise_dist * _data[index * 4 + 2] * _data[index * 4 + 2];
+	
+	/* Color */
+	_data[index*4 + 3] = result;
 }
