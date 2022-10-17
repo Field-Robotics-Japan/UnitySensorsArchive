@@ -16,20 +16,20 @@ namespace FRJ.Sensor
     [ExecuteInEditMode]
     public class Camera : MonoBehaviour
     {
+
         [Header("Parameters")]
         [SerializeField] private UnityEngine.Camera _cam;
         [SerializeField] private ComputeShader _depthShader;
-
         [SerializeField] private Vector2Int _resolution = new Vector2Int(640, 480);
         [SerializeField][Range(0, 100)] int _quality = 50;
 
-        //[SerializeField, Range(0.0001f, 179.0f)] private float _verticalFOV = 60.0f;
+        [SerializeField, Range(0.0001f, 179.0f)] private float _verticalFOV = 60.0f;
         //[SerializeField, Range(0.0001f, 179.0f)] private float _horizontalFOV = 91.45445f;
 
         [SerializeField, Range(0.02f, 1000.0f)] private float _minDistance = 0.3f;
         [SerializeField, Range(0.02f, 1000.0f)] private float _maxDistance = 1000.0f;
 
-        [SerializeField] private float _noise_sigma = 1.0f;
+        [SerializeField] private float _noise_sigma = 0.1f;
 
         [SerializeField] private float _scanRate = 20.0f;
 
@@ -73,18 +73,16 @@ namespace FRJ.Sensor
 
         public float aspect { get => this._cam.aspect; }
 
-        /*
-        private void UpdateFOV()
+        
+        public void UpdateFOV()
         {
             if (!_cam) return;
-            if (_verticalFOV == _vFOV_old && _horizontalFOV == _hFOV_old) return;
             _cam.fieldOfView = _verticalFOV;
-            _cam.aspect = Mathf.Tan(_horizontalFOV * 0.5f * Mathf.Deg2Rad) /
-                            Mathf.Tan(_verticalFOV * 0.5f * Mathf.Deg2Rad);
-            _vFOV_old = _verticalFOV;
-            _hFOV_old = _horizontalFOV;
+            _rt_color = new RenderTexture(_resolution.x, _resolution.y, 0, RenderTextureFormat.ARGB32);
+            _rt_depth = new RenderTexture(_resolution.x, _resolution.y, 32, RenderTextureFormat.Depth);
+            _cam.SetTargetBuffers(_rt_color.colorBuffer, _rt_depth.depthBuffer);
         }
-
+        /*
         public void ResetAspectRatio()
         {
             if (!_cam) return;
@@ -99,6 +97,7 @@ namespace FRJ.Sensor
         public void Init()
         {
             if (isInit) return;
+            _cam.fieldOfView = _verticalFOV;
             _rt_color = new RenderTexture(_resolution.x, _resolution.y, 0, RenderTextureFormat.ARGB32);
             _rt_depth = new RenderTexture(_resolution.x, _resolution.y, 32, RenderTextureFormat.Depth);
             
@@ -222,13 +221,12 @@ public class CameraEditor : Editor
     public override void OnInspectorGUI()
     {
         base.OnInspectorGUI();
+        /*
         if (GUILayout.Button("Reset Aspect Ratio"))
         {
             //_cam.ResetAspectRatio();
             this.serializedObject.ApplyModifiedProperties();
         }
-
-        EditorGUILayout.LabelField("Aspect Ratio", _cam.aspect.ToString("F4"));
 
         if (GUILayout.Button("Initialize"))
         {
@@ -237,7 +235,14 @@ public class CameraEditor : Editor
 
             Debug.Log("Camera initialized");
         }
-
+        */
+        EditorGUILayout.LabelField("Aspect Ratio", _cam.aspect.ToString("F4"));
+        if (GUILayout.Button("Set FOV"))
+        {
+            this.serializedObject.ApplyModifiedProperties();
+            _cam.UpdateFOV();
+            Debug.Log("Camera FOV updated");
+        }
         if (GUILayout.Button("Reset"))
         {
             _cam.isInit = false;
