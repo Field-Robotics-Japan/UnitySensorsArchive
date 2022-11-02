@@ -215,10 +215,10 @@ namespace FRJ.Sensor
                     (float)Math.Cos(2.0f * Math.PI * rand3);
                 normrand *= sigma;
 
-                point[index] = Quaternion.Inverse(origin_rot[index]) * new Vector3( results[index].point.x - origin_pos[index].x,                                       
-                                                                                    results[index].point.y - origin_pos[index].y,
-                                                                                    results[index].point.z - origin_pos[index].z);
-                
+                point[index] = Quaternion.Inverse(origin_rot[index]) * new Vector3(+results[index].point.z - origin_pos[index].z,
+                                                                                   +results[index].point.y - origin_pos[index].y,
+                                                                                   -results[index].point.x + origin_pos[index].x);
+
                 if (results[index].distance < minRange)
                 {
                     intensities[index] = 0;
