@@ -123,7 +123,7 @@ namespace FRJ.Sensor
             _depthShader.SetInt("width", _resolution.x);
             _depthShader.SetInt("height", _resolution.y);
             _depthShader.SetFloat("vDisW", _resolution.x * 0.5f / Mathf.Tan(_cam.fieldOfView * _cam.aspect * 0.5f * Mathf.Deg2Rad));
-            _depthShader.SetFloat("vDisH", _resolution.x * 0.5f / Mathf.Tan(_cam.fieldOfView * 0.5f * Mathf.Deg2Rad));
+            _depthShader.SetFloat("vDisH", _resolution.y * 0.5f / Mathf.Tan(_cam.fieldOfView * 0.5f * Mathf.Deg2Rad));
             _depthShader.SetTexture(0, "_depthBuffer", _rt_depth);
             _depthShader.SetTexture(0, "_colorBuffer", _rt_color);
             
@@ -154,7 +154,7 @@ namespace FRJ.Sensor
 
             _noiseCB.SetData(_noise);
 
-            _depthShader.Dispatch(0, _rt_depth.width / 16, _rt_color.height / 16, 1);
+            _depthShader.Dispatch(0, _resolution.x/16, _resolution.y/16, 1);
             _dataCB.GetData(_data_pc);
 
             for (int h = 0; h < _resolution.y; h++)
@@ -204,7 +204,7 @@ namespace FRJ.Sensor
                 tmp[2] = _data_pc[i + 10];
                 tmp[3] = _data_pc[i + 11];
                 z = BitConverter.ToSingle(tmp, 0);
-                Gizmos.DrawSphere(this.transform.position + new Vector3(x, z, y), _pointSize);
+                Gizmos.DrawSphere(this.transform.TransformPoint(this.transform.position + new Vector3(x, z, y)), _pointSize);
             }
         }
 #endif
