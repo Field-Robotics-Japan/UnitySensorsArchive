@@ -154,7 +154,7 @@ namespace FRJ.Sensor
 
             _noiseCB.SetData(_noise);
 
-            _depthShader.Dispatch(0, _rt_depth.width / 16, _rt_color.height / 16, 1);
+            _depthShader.Dispatch(0, _resolution.x/16, _resolution.y/16, 1);
             _dataCB.GetData(_data_pc);
 
             for (int h = 0; h < _resolution.y; h++)
@@ -204,7 +204,7 @@ namespace FRJ.Sensor
                 tmp[2] = _data_pc[i + 10];
                 tmp[3] = _data_pc[i + 11];
                 z = BitConverter.ToSingle(tmp, 0);
-                Gizmos.DrawSphere(this.transform.position + new Vector3(x, z, y), _pointSize);
+                Gizmos.DrawSphere(this.transform.TransformVector(new Vector3(x, z, y)) + this.transform.position, _pointSize);
             }
         }
 #endif
