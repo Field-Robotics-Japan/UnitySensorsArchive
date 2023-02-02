@@ -123,7 +123,7 @@ namespace FRJ.Sensor
             _depthShader.SetInt("width", _resolution.x);
             _depthShader.SetInt("height", _resolution.y);
             _depthShader.SetFloat("vDisW", _resolution.x * 0.5f / Mathf.Tan(_cam.fieldOfView * _cam.aspect * 0.5f * Mathf.Deg2Rad));
-            _depthShader.SetFloat("vDisH", _resolution.x * 0.5f / Mathf.Tan(_cam.fieldOfView * 0.5f * Mathf.Deg2Rad));
+            _depthShader.SetFloat("vDisH", _resolution.y * 0.5f / Mathf.Tan(_cam.fieldOfView * 0.5f * Mathf.Deg2Rad));
             _depthShader.SetTexture(0, "_depthBuffer", _rt_depth);
             _depthShader.SetTexture(0, "_colorBuffer", _rt_color);
             
