@@ -40,16 +40,18 @@ namespace FRJ.Sensor
         // Scanning rate (Hz)
         [SerializeField] public float scanRate = 20f;
         // Random seed
-        [SerializeField] public uint randomSeed = 1;
+        [HideInInspector] public uint randomSeed = 1;
         // Gaussian noise sigma
         [SerializeField] private float _gaussianNoiseSigma = 0.01f;
 
+        #region Informations
         [Header("Informations(No need to input)")]
-        [SerializeField] public bool isInitialized;
-        [SerializeField] public string csvFilePath;
-        [SerializeField] private bool _csvLoaded;
-        [SerializeField] private int _csvLength;
-        [SerializeField] private int _loadedLine;
+        public bool isInitialized;
+        [HideInInspector] public string csvFilePath;
+        private bool _csvLoaded;
+        private int _csvLength;
+        private int _loadedLine;
+        #endregion
 
 #if UNITY_EDITOR
         [Header("Debug")]
@@ -59,7 +61,7 @@ namespace FRJ.Sensor
         [SerializeField] private Color _debug_drawScanPattern_color = Color.white;
 #endif
 
-        [Header("NativeArrays")]
+        #region NativeArray
         // Raycast command
         public NativeArray<RaycastCommand> commands;
         // Raycast direction vectors
@@ -73,6 +75,7 @@ namespace FRJ.Sensor
         public NativeArray<Vector3> point;
         // Intensity data
         public NativeArray<byte> intensities;
+        #endregion
 
         public Vector3[] commandDirVecs { get => this._commandDirVecs; }
 
@@ -215,10 +218,10 @@ namespace FRJ.Sensor
                     (float)Math.Cos(2.0f * Math.PI * rand3);
                 normrand *= sigma;
 
-                point[index] = Quaternion.Inverse(origin_rot[index]) * new Vector3( results[index].point.x - origin_pos[index].x,                                       
-                                                                                    results[index].point.y - origin_pos[index].y,
-                                                                                    results[index].point.z - origin_pos[index].z);
-                
+                point[index] = Quaternion.Inverse(origin_rot[index]) * new Vector3(+results[index].point.z - origin_pos[index].z,
+                                                                                   +results[index].point.y - origin_pos[index].y,
+                                                                                   -results[index].point.x + origin_pos[index].x);
+
                 if (results[index].distance < minRange)
                 {
                     intensities[index] = 0;
