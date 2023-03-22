@@ -3,51 +3,31 @@
 float n_f;
 float f;
 
-int width;
-int height;
+uint width;
+uint height;
 
 float vDisW;
 float vDisH;
 
-Texture2D<float> _depthBuffer;
-Texture2D<float4> _colorBuffer;
-StructuredBuffer<float> _noise;
+Texture2D<float4> colorBuffer;
+Texture2D<float> depthBuffer;
 
-RWStructuredBuffer<float> _data;
+RWStructuredBuffer<float> data;
 
 [numthreads(16,16,1)]
 void CSMain (uint3 id : SV_DispatchThreadID)
 {
-	/* Index Calculation */
-	uint index = id.x + id.y * width;
+	uint index = id.y*width + id.x;
 
-	/* Color Data Compression */
-	uint a = 126;
-	uint r = (uint)(_colorBuffer[id.xy].x * 255);
-	uint g = (uint)(_colorBuffer[id.xy].y * 255);
-	uint b = (uint)(_colorBuffer[id.xy].z * 255);
+	float3 colorBufferValue = colorBuffer[id.xy];
+	uint r = (uint)(colorBufferValue.x * 255);
+	uint g = (uint)(colorBufferValue.y * 255);
+	uint b = (uint)(colorBufferValue.z * 255);
 
-	float sign;
-	if(a < 128.0f) sign = 1.0f;
-	else sign = -1.0f;
+	float depthBufferValue = 1.0f - depthBuffer[id.xy];
 
-	float exponent = 2.0f * (a % 128) - 126.0f;
-	if(r < 128.0f)exponent-=1.0f;
-
-	float mantissa = (r % 128) * 65536.0f + g * 256.0f + b + ((float)0x800000); 
-
-	float result = sign * pow(2, exponent - 23.0f) * mantissa;
-	
-	/* Coordinnate Calculation */
-	_data[index*4 + 0] = -0.5f / (n_f * _depthBuffer[id.xy] + f) * ((float)width - id.x * 2 - 1.0f) / (vDisW);
-	_data[index*4 + 1] = +1.0f / (n_f * _depthBuffer[id.xy] + f);
-	_data[index*4 + 2] = -0.5f / (n_f * _depthBuffer[id.xy] + f) * ((float)height - id.y * 2 - 1.0f) / (vDisH);
-
-	float noise_dist = _noise[index]/(_data[index * 4] * _data[index * 4] + _data[index * 4 + 1] * _data[index * 4 + 1] + _data[index * 4 + 2] * _data[index * 4 + 2]);
-	_data[index*4 + 0] += noise_dist * _data[index * 4 + 0] * _data[index * 4 + 0];
-	_data[index*4 + 1] += noise_dist * _data[index * 4 + 1] * _data[index * 4 + 1];
-	_data[index*4 + 2] += noise_dist * _data[index * 4 + 2] * _data[index * 4 + 2];
-	
-	/* Color */
-	_data[index*4 + 3] = result;
+	data[index*4 + 0] = -0.5f / (n_f * depthBufferValue + f) * ((float)width - id.x * 2 - 1.0f) / (vDisW);
+	data[index*4 + 1] = +1.0f / (n_f * depthBufferValue + f);
+	data[index*4 + 2] = -0.5f / (n_f * depthBufferValue + f) * ((float)height - id.y * 2 - 1.0f) / (vDisH);
+	data[index*4 + 3] = pow(2, (r<128?-24:-23)) * ((r % 128) * 65536.0f + g * 256.0f + b + ((float)0x800000));
 }
