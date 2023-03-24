@@ -17,6 +17,8 @@ namespace FRJ.Sensor
         [SerializeField, Range(0.01f, 1000.0f)] private float _minDistance = 0.3f;
         [SerializeField, Range(0.01f, 1000.0f)] private float _maxDistance = 1000.0f;
 
+        [SerializeField] private float _noise = 0.0f;
+
         [SerializeField] private float _scanRate = 20.0f;
 
 #if UNITY_EDITOR
@@ -66,6 +68,7 @@ namespace FRJ.Sensor
             _depthShader.SetInt("height", _resolution.y);
             _depthShader.SetFloat("vDisW", _resolution.x * 0.5f / Mathf.Tan(_cam.fieldOfView * _cam.aspect * 0.5f * Mathf.Deg2Rad));
             _depthShader.SetFloat("vDisH", _resolution.y * 0.5f / Mathf.Tan(_cam.fieldOfView * 0.5f * Mathf.Deg2Rad));
+            _depthShader.SetFloat("noise", _noise);
             _depthShader.SetTexture(0, "colorBuffer", _rt_color);
             _depthShader.SetTexture(0, "depthBuffer", _rt_depth);
             _depthShader.SetBuffer(0, "data", _data_cb);
