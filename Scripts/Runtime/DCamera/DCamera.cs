@@ -20,8 +20,12 @@ namespace FRJ.Sensor
         [SerializeField] private float _scanRate = 20.0f;
 
 #if UNITY_EDITOR
+        [Header("Gizmos")]
         [SerializeField] private bool _drawPoints;
-        [SerializeField, Range(0.0f, 1.0f)] private float _pointSize = 0.1f; 
+        [SerializeField] private int _drawPointNum = 1000;
+        [SerializeField, Range(0.0f, 1.0f)] private float _size = 0.1f; 
+
+        private int _pointNum;
 #endif
 
         private RenderTexture _rt_color = null;
@@ -65,6 +69,10 @@ namespace FRJ.Sensor
             _depthShader.SetTexture(0, "colorBuffer", _rt_color);
             _depthShader.SetTexture(0, "depthBuffer", _rt_depth);
             _depthShader.SetBuffer(0, "data", _data_cb);
+
+#if UNITY_EDITOR
+            _pointNum = _resolution.x*_resolution.y;
+#endif
         }
 
         private void Update()
@@ -94,27 +102,29 @@ namespace FRJ.Sensor
         private void OnDrawGizmos()
         {
             if (!_drawPoints || !Application.isPlaying) return;
-            for (int i = 0; i < _resolution.x * _resolution.y * 16; i += 16)
+
+            for(int i = 0; i < (_pointNum > _drawPointNum ? _drawPointNum : _pointNum); i++)
             {
-                Gizmos.color = new Color(_data[i + 14] / 255.0f, _data[i + 13] / 255.0f, _data[i + 12] / 255.0f);
+                int index = (_pointNum > _drawPointNum ? UnityEngine.Random.Range(0, _pointNum) : i)*16;
+                Gizmos.color = new Color(_data[index + 14] / 255.0f, _data[index + 13] / 255.0f, _data[index + 12] / 255.0f);
                 byte[] tmp = new byte[4];
                 float x, y, z;
-                tmp[0] = _data[i + 0];
-                tmp[1] = _data[i + 1];
-                tmp[2] = _data[i + 2];
-                tmp[3] = _data[i + 3];
+                tmp[0] = _data[index + 0];
+                tmp[1] = _data[index + 1];
+                tmp[2] = _data[index + 2];
+                tmp[3] = _data[index + 3];
                 x = BitConverter.ToSingle(tmp, 0);
-                tmp[0] = _data[i + 4];
-                tmp[1] = _data[i + 5];
-                tmp[2] = _data[i + 6];
-                tmp[3] = _data[i + 7];
+                tmp[0] = _data[index + 4];
+                tmp[1] = _data[index + 5];
+                tmp[2] = _data[index + 6];
+                tmp[3] = _data[index + 7];
                 y = BitConverter.ToSingle(tmp, 0);
-                tmp[0] = _data[i + 8];
-                tmp[1] = _data[i + 9];
-                tmp[2] = _data[i + 10];
-                tmp[3] = _data[i + 11];
+                tmp[0] = _data[index + 8];
+                tmp[1] = _data[index + 9];
+                tmp[2] = _data[index + 10];
+                tmp[3] = _data[index + 11];
                 z = BitConverter.ToSingle(tmp, 0);
-                Gizmos.DrawSphere(this.transform.TransformVector(new Vector3(x, z, y)) + this.transform.position, _pointSize);
+                Gizmos.DrawSphere(this.transform.TransformVector(new Vector3(x, z, y)) + this.transform.position, _size);
             }
         }
 #endif
