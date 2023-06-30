@@ -1,0 +1,50 @@
+#pragma kernel CSMain
+
+#include "UnityShaderVariables.cginc"
+
+float n_f;
+float f;
+
+uint width;
+uint height;
+
+float vDisW;
+float vDisH;
+
+float noise;
+
+Texture2D<float4> colorBuffer;
+Texture2D<float> depthBuffer;
+
+RWStructuredBuffer<float> data;
+
+[numthreads(16,16,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+	uint index = id.y*width + id.x;
+
+	float4 colorBufferValue = colorBuffer[id.xy];
+	uint r = (uint)(colorBufferValue.x * 255);
+	uint g = (uint)(colorBufferValue.y * 255);
+	uint b = (uint)(colorBufferValue.z * 255);
+	
+	float depthBufferValue;
+	if(UNITY_NEAR_CLIP_VALUE < 0.0)
+		depthBufferValue = 1.0f - depthBuffer[id.xy];
+	else
+		depthBufferValue = depthBuffer[id.xy];
+	
+	data[index*4 + 0] = -0.5f / (n_f * depthBufferValue + f) * ((float)width - id.x * 2 - 1.0f) / (vDisW);
+	data[index*4 + 1] = +1.0f / (n_f * depthBufferValue + f);
+	data[index*4 + 2] = -0.5f / (n_f * depthBufferValue + f) * ((float)height - id.y * 2 - 1.0f) / (vDisH);
+
+	float2 co;
+	co.x = index;
+	co.y = _Time;
+	float noise_dist = (frac(sin(dot(co, float2(12.9898, 78.233))) * 43758.5453)-0.5f)*noise/(data[index * 4] * data[index * 4] + data[index * 4 + 1] * data[index * 4 + 1] + data[index * 4 + 2] * data[index * 4 + 2]);
+	data[index*4 + 0] += noise_dist * data[index * 4 + 0] * data[index * 4 + 0];
+	data[index*4 + 1] += noise_dist * data[index * 4 + 1] * data[index * 4 + 1];
+	data[index*4 + 2] += noise_dist * data[index * 4 + 2] * data[index * 4 + 2];
+
+	data[index*4 + 3] = pow(2, (r<128?-24:-23)) * ((r % 128) * 65536.0f + g * 256.0f + b + ((float)0x800000));
+}
